@@ -4,10 +4,10 @@
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 # Install packages
-brew install $(cat brews) || true
+brew install $(cat ../packages/brews) || true
 
 # Install casks
-brew cask install $(cat casks) || true
+brew cask install $(cat ../packages/casks) || true
 
 # Install python modules (use sudo because no virutalenv yet)
 sudo pip install virtualenvwrapper thefuck
@@ -25,18 +25,13 @@ git clone https://github.com/zsh-users/antigen /usr/local/share/antigen
 # Remove default dotfiles and symlink to new ones.
 files=("~/.zshrc" "~/.vimrc" "~/.gitconfig" "~/.commit-template-git.txt")
 
-for file in files
+for file in $files
 do
   if [ -f $file ] ; then
     rm -f $file
   fi
+  ln -s ~/dotfiles/configs/$file $file
 done
-
-# Symlink the dotfiles
-ln -s ~/dotfiles/.zshrc ~/.zshrc
-ln -s ~/dotfiles/.vimrc ~/.vimrc
-ln -s ~/dotfiles/.gitconfig ~/.gitconfig
-ln -s ~/dotfiles/.commit-template-git.txt ~/.commit-template-git.txt
 
 # Install the vim Vundle plugins
 vim +PluginInstall +qall
