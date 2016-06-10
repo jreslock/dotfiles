@@ -6,7 +6,7 @@
 [core]
 	editor = vim
 [commit]
-	template = /Users/jr186055/.commit-template-git.txt
+	template = /Users/jr186055/.git-commit-template
 [alias]
 	ci = push
 	co = checkout

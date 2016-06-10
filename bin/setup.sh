@@ -23,22 +23,28 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 git clone https://github.com/zsh-users/antigen /usr/local/share/antigen
 
 # Remove default dotfiles and symlink to new ones.
-files=("~/.zshrc" "~/.vimrc" "~/.gitconfig" "~/.commit-template-git.txt")
+files=(".zshrc" ".vimrc" ".gitconfig" ".git-commit-template")
 
 for file in $files
 do
-  if [ -f $file ] ; then
-    rm -f $file
+  if [ -f ~/$file ] ; then
+    rm -f ~/$file
   fi
-  ln -s ~/dotfiles/configs/$file $file
+  ln -s ~/dotfiles/configs/$file ~/$file
 done
 
 # Install the vim Vundle plugins
 vim +PluginInstall +qall
 
 # Make an envs dir for virtualenvwrapper
-mkdir -p ~/Envs
+dirs=("~/Envs")
 
-# Source the new .zshrc
-source ~/.zshrc
+for dir in $dirs
+do
+  if [ ! -d "$dir" ] ; then
+    mkdir -p "$dir"
+  fi
+done
 
+# Source the new .zshrc by simply switching shells
+zsh
