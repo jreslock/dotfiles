@@ -20,6 +20,7 @@ antigen bundles <<EOBUNDLES
     brew-cask
     docker
     mvn
+    ssh-agent
     thefuck
     vagrant
     vi-mode
