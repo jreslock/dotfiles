@@ -1,10 +1,6 @@
 # Source Antigen
 source /usr/local/share/antigen/antigen.zsh
 
-# vi-mode bindings
-bindkey -v
-bindkey '^R' history-incremental-search-backward
-
 # Tell Antigen to use oh-my-zsh
 antigen use oh-my-zsh
 
@@ -23,10 +19,8 @@ antigen bundles <<EOBUNDLES
     ssh-agent
     thefuck
     vagrant
-    vi-mode
     zsh-users/zsh-syntax-highlighting
 EOBUNDLES
-
 
 #Set some vars
 export EDITOR="vim"
@@ -48,3 +42,4 @@ antigen theme tonyseek/oh-my-zsh-seeker-theme seeker
 
 # Done
 antigen apply
+function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
