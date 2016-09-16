@@ -16,6 +16,7 @@ antigen bundles <<EOBUNDLES
     brew-cask
     docker
     mvn
+    ruby
     ssh-agent
     thefuck
     vagrant
@@ -28,6 +29,7 @@ export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/l
 export WORKON_HOME=~/Envs
 
 # Set aliases
+alias ssh="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 alias o="vim"
 alias woi="workon infradev"
 alias woh="workon hfab"

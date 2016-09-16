@@ -17,6 +17,7 @@ Plugin 'tpope/vim-python'
 Plugin 'tpope/vim-markdown'
 Plugin 'klen/python-mode'
 Plugin 'scrooloose/syntastic'
+Plugin 'scrooloose/nerdtree'
 Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
 
 
