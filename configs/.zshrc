@@ -30,6 +30,7 @@ export WORKON_HOME=~/Envs
 
 # Set aliases
 alias ssh="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+alias aws="noglob aws"
 alias o="vim"
 alias woi="workon infradev"
 alias woh="workon hfab"
@@ -44,4 +45,15 @@ antigen theme tonyseek/oh-my-zsh-seeker-theme seeker
 
 # Done
 antigen apply
+export SSH_ASKPASS="/usr/local/bin/ssh-askpass"
 function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f /Users/jr186055/Downloads/google-cloud-sdk/path.zsh.inc ]; then
+  source '/Users/jr186055/Downloads/google-cloud-sdk/path.zsh.inc'
+fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f /Users/jr186055/Downloads/google-cloud-sdk/completion.zsh.inc ]; then
+  source '/Users/jr186055/Downloads/google-cloud-sdk/completion.zsh.inc'
+fi
