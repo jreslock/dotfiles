@@ -1,7 +1,7 @@
 [user]
 	name = Jason Reslock
 	email = jr186055@teradata.com
-	signkey = AEDAEA14
+	signingkey = 41CC316FB9B299ED
 [push]
 	default = simple
 [core]
