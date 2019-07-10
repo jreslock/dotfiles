@@ -1,5 +1,5 @@
 [core]
-        editor = code --wait
+        editor = code --wait --new-window
 
 [commit]
         template = /Users/jreslock/.git-commit-template
@@ -27,4 +27,4 @@
     	tool = default-difftool
 
 [difftool "default-difftool"]
-    	cmd = code --wait --diff $LOCAL $REMOTE
+    	cmd = code --wait --new-window --diff $LOCAL $REMOTE
