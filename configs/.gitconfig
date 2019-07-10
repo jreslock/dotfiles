@@ -2,7 +2,7 @@
         editor = code --wait
 
 [commit]
-        template = $HOME/.git-commit-template
+        template = /Users/jreslock/.git-commit-template
 
 [user]
         email = jreslock@gmail.com

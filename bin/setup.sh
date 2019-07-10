@@ -23,7 +23,7 @@ do
   if [ -f ~/"$file" ] ; then
     rm -f ~/"$file"
   fi
-  ln -s ~/dotfiles/configs/"$file" "$HOME"/"$file"
+  ln -s "$HOME"/code/dotfiles/configs/"$file" "$HOME"/"$file"
 done
 
 # Source the new .zshrc by simply switching shells
