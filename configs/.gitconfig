@@ -1,33 +1,30 @@
-[user]
-	name = Jason Reslock
-	email = jr186055@teradata.com
-	signingkey = 41CC316FB9B299ED
-[push]
-	default = simple
 [core]
-	editor = vim
+        editor = code --wait
+
 [commit]
-	template = /Users/jr186055/.git-commit-template
+        template = $HOME/.git-commit-template
+
+[user]
+        email = jreslock@gmail.com
+
+[color]
+        ui = auto
+
+[credential]
+        helper = !aws codecommit credential-helper $@
+        UseHttpPath = true
+
+[push]
+        default = current
+
 [alias]
-	ci = push
-	co = checkout
-	stat = status
-	outgoing = !sh -c \"git log --reverse --oneline origin/${1:-master}..$2\"
-	out = !git outgoing \"$@\"
-	incoming = "!sh -c \"git fetch; git log --reverse --oneline $2..origin/${1:-master}\""
-	in = !git incoming \"$@\"
-	sync = "!sh -c \"_CURBRANCH=`git name-rev --name-only HEAD` && git co ${1:-master} && git pull && git co \\$_CURBRANCH && git rebase ${1:-master}\""
-	backout = revert -n
-	export = show
-	gloga = log --oneline --graph --decorate --all
-	glog = log --oneline --graph --date-order --decorate --all --pretty=format:'%C(yellow)%h %C(auto)%d %Creset%s %Cgreen%aN'
-	refresh = commit --amend -C HEAD
-	meld = difftool --dir-diff -y
-	test = "!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi"
+        ignore = "!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi"
+
+[fetch]
+        prune = true
+
 [diff]
-	tool = vimdiff
-[merge]
-	ff = only
-	tool = vimdiff
-[difftool]
-	prompt = false
+    	tool = default-difftool
+
+[difftool "default-difftool"]
+    	cmd = code --wait --diff $LOCAL $REMOTE
