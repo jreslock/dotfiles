@@ -4,13 +4,19 @@ export EDITOR='code'
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:/usr/local/bin:/usr/local/sbin:$PATH"
 export DISABLE_MAGIC_FUNCTIONS=true
+# Activate virtualenv
+
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+pyenv activate pydev3
 
 # Source Antigen
 source ~/antigen.zsh
 
 # Tell Antigen to use oh-my-zsh
 antigen use oh-my-zsh
-antigen theme https://github.com/denysdovhan/spaceship-zsh-theme spaceship
+antigen theme denysdovhan/spaceship-prompt
 
 # Install plugins
 antigen bundles <<EOBUNDLES
@@ -36,17 +42,12 @@ antigen bundles <<EOBUNDLES
     zsh-users/zsh-history-substring-search ./zsh-history-substring-search.zsh
 EOBUNDLES
 
-# Activate virtualenv
-
-export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-
 # Set aliases
 alias o="code"
 alias c="clear"
 alias pull="git pull"
 alias push="git push"
+alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 
 GPG_TTY=$(tty)
 export GPG_TTY
