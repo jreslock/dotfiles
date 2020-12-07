@@ -1,58 +1,44 @@
-#Set some vars
-
-export EDITOR='code'
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:/usr/local/bin:/usr/local/sbin:$PATH"
+export EDITOR="vim"
 export DISABLE_MAGIC_FUNCTIONS=true
-# Activate virtualenv
-
+export GROOVY_HOME=/usr/local/opt/groovy/libexec
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-pyenv activate pydev3
 
-# Source Antigen
-source ~/antigen.zsh
+ANTIBODY_HOME="$(antibody home)"
+export ZSH="$ANTIBODY_HOME"/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh
 
-# Tell Antigen to use oh-my-zsh
-antigen use oh-my-zsh
-antigen theme denysdovhan/spaceship-prompt
+source $ZSH/oh-my-zsh.sh
+source <(antibody init)
+antibody bundle < ~/.zsh_plugins
 
-# Install plugins
-antigen bundles <<EOBUNDLES
-    autojump
-    aws
-    brew
-    common-aliases
-    compleat
-    docker
-    encode64
-    git
-    git-extras
-    gpg-agent
-    jsontools
-    pip
-    python
-    pyenv
-    sbt
-    scala
-    terraform
-    zsh-users/zsh-completions
-    zsh-users/zsh-syntax-highlighting
-    zsh-users/zsh-history-substring-search ./zsh-history-substring-search.zsh
-EOBUNDLES
-
-# Set aliases
-alias o="code"
 alias c="clear"
 alias pull="git pull"
 alias push="git push"
 alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias rr="cd $(git rev-parse --show-toplevel)"
 
 GPG_TTY=$(tty)
 export GPG_TTY
 export SSH_AUTH_SOCK=/$HOME/.gnupg/S.gpg-agent.ssh
 
-# Done
-antigen apply
 function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
+
+# makana autocomplete setup
+MAKANA_AC_ZSH_SETUP_PATH=/Users/jreslock/Library/Caches/makana/autocomplete/zsh_setup && test -f $MAKANA_AC_ZSH_SETUP_PATH && source $MAKANA_AC_ZSH_SETUP_PATH;
+
+export PYENV_ROOT=$HOME/.pyenv
+
+if command -v pyenv 1>/dev/null 2>&1; 
+  then 
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+fi
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/jreslock/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/jreslock/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/jreslock/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/jreslock/google-cloud-sdk/completion.zsh.inc'; fi
+export PATH="/usr/local/sbin:$PATH"
