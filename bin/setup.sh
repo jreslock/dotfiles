@@ -12,12 +12,6 @@ brew install "$(cat ../packages/brews)" || true
 # Install casks
 brew cask install "$(cat ../packages/casks)" || true
 
-# Clean up existing stuff, if any.
-rm -fr /usr/local/share/antigen
-
-# Get Antigen
-git clone https://github.com/zsh-users/antigen /usr/local/share/antigen
-
 for file in $(.zshrc .gitconfig .git-commit-template)
 do
   if [ -f ~/"$file" ] ; then
@@ -27,4 +21,4 @@ do
 done
 
 # Source the new .zshrc by simply switching shells
-zsh
+exec $SHELL
