@@ -1,12 +1,10 @@
+antibody
 coreutils
 git
 openssl
-packer
 pinentry
 pre-commit
 pyenv
 pyenv-virtualenv
 python
-sbt
 shellcheck
-terraform
