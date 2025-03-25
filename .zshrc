@@ -23,7 +23,7 @@ export EDITOR="code"
 export DISABLE_MAGIC_FUNCTIONS=true
 export GROOVY_HOME="/usr/local/opt/groovy/libexec"
 
-source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
+source $HOME/.antidote/antidote.zsh
 source <(antidote init)
 
 ANTIDOTE_HOME="$(antidote home)"

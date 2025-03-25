@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 # Install Antidote
-ANTIDOTE_DIR="${ZDOTDIR:-~}/.antidote"
-
-if [ ! -d "${ZDOTDIR:-~}/.antidote" ]; then
-  git clone --depth=1 https://github.com/mattmc3/antidote.git "${ANTIDOTE_DIR}"
+if [ ! -d "${HOME}/.antidote" ]; then
+  git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
 else
     echo "Antidote already installed"
 fi
@@ -12,11 +10,6 @@ fi
 # Detect OS and architecture
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ]; then
-    ARCH="aarch64"
-elif [ "$ARCH" = "x86_64" ]; then
-    ARCH="amd64"
-fi
 
 # Ensure unzip is installed
 if ! command -v unzip &> /dev/null; then
@@ -39,7 +32,15 @@ if ! command -v aws &> /dev/null; then
         rm AWSCLIV2.pkg
     else
         # Linux installation
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip" -o "awscliv2.zip"
+        if [ "$ARCH" = "arm64" ]; then
+            target="aarch64"
+        elif [ "$ARCH" = "x86_64" ]; then
+            target="x86_64"
+        else
+            echo "Unsupported architecture: ${ARCH}"
+            exit 1
+        fi
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-${target}.zip" -o "awscliv2.zip"
         unzip awscliv2.zip
         ./aws/install
         rm -rf aws awscliv2.zip
@@ -55,12 +56,16 @@ if ! command -v session-manager-plugin &> /dev/null; then
         brew install session-manager-plugin
     else
         # Construct the appropriate URL based on architecture
+        # Linux installation
         if [ "$ARCH" = "arm64" ]; then
-            target="ubuntu_arm64"
+            target="arm64"
+        elif [ "$ARCH" = "x86_64" ]; then
+            target="64bit"
         else
-            target="ubuntu_64bit"
+            echo "Unsupported architecture: ${ARCH}"
+            exit 1
         fi
-        SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/${target}/session-manager-plugin.deb"
+        SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
         curl "$SESSION_MANAGER_URL" -o "session-manager-plugin.deb"
         dpkg -i session-manager-plugin.deb
         rm session-manager-plugin.deb
@@ -77,15 +82,25 @@ if ! command -v git-credential-manager &> /dev/null; then
         brew install --cask git-credential-manager
     else
         # Linux installation
-        curl -L https://aka.ms/gcm/linux-install-source.sh | sh
+        if [ "$ARCH" = "arm64" ]; then
+            target="arm64"
+        elif [ "$ARCH" = "x86_64" ]; then
+            target="amd64"
+        else
+            echo "Unsupported architecture: ${ARCH}"
+            exit 1
+        fi
+        curl "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz" -o "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
+        tar -xvf "${HOME}/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
         git config credential.helper 'cache --timeout=3600'
+        rm "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
     fi
 else
     echo "Git Credential Manager is already installed"
 fi
 
 # Install Docker ECR Credential Helper
-if ! command -v docker-credential-helper-ecr &> /dev/null; then
+if ! command -v docker-credential-ecr-login &> /dev/null; then
     echo "Installing Docker ECR Credential Helper..."
     if [ "$OS" = "darwin" ]; then
         # macOS installation
@@ -93,7 +108,7 @@ if ! command -v docker-credential-helper-ecr &> /dev/null; then
     else
         # Linux installation
         apt-get update -yqq
-        apt-get install -y docker-credential-helper-ecr
+        apt-get install -y amazon-ecr-credential-helper
     fi
 else
     echo "Docker ECR Credential Helper is already installed"
@@ -114,17 +129,6 @@ if [ -f "$HOME/.zsh_plugins.txt" ]; then
 fi
 
 # Copy new files
-cp .zshrc "$HOME/.zshrc"
-cp .zsh_plugins.txt "$HOME/.zsh_plugins.txt"
+cp "$HOME/dotfiles/.zshrc" "$HOME/.zshrc"
+cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
 echo "Copied .zshrc and .zsh_plugins.txt to $HOME directory"
-
-# Set zsh as default shell (only on non-Darwin systems)
-if [ "$OS" != "darwin" ] && [ "$SHELL" != "$(type -p zsh)" ]; then
-    echo "Setting zsh as default shell..."
-    chsh -s "$(type -p zsh)"
-    echo "Please log out and back in for the changes to take effect"
-else
-    echo "zsh is already the default shell"
-fi
-
-exec $SHELL
