@@ -7,6 +7,19 @@ else
     echo "Antidote already installed"
 fi
 
+# Install zsh
+if ! command -v zsh &> /dev/null; then
+    echo "Installing zsh..."
+    if [ "$OS" = "darwin" ]; then
+        brew install zsh
+    else
+        apt-get update -yqq
+        apt-get install -y zsh
+    fi
+else
+    echo "zsh already installed"
+fi
+
 # Detect OS and architecture
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
@@ -135,6 +148,8 @@ if [ -f "$HOME/.zsh_plugins.txt" ]; then
 fi
 
 # Copy new files
+mkdir -p "$HOME/.config/docker"
+cp "$HOME/dotfiles/config.json" "$HOME/.docker/config.json"
 cp "$HOME/dotfiles/.zshrc" "$HOME/.zshrc"
 cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
-echo "Copied .zshrc and .zsh_plugins.txt to $HOME directory"
+echo "Copied .docker/config.json, .zshrc, and .zsh_plugins.txt to $HOME directory"
