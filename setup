@@ -33,9 +33,11 @@ if ! command -v aws &> /dev/null; then
     else
         # Linux installation
         if [ "$ARCH" = "arm64" ]; then
-            target="aarch64"
+            target="arm64"
         elif [ "$ARCH" = "x86_64" ]; then
             target="x86_64"
+        elif [ "$ARCH" = "aarch64" ]; then
+            target="aarch64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
@@ -61,6 +63,8 @@ if ! command -v session-manager-plugin &> /dev/null; then
             target="arm64"
         elif [ "$ARCH" = "x86_64" ]; then
             target="64bit"
+        elif [ "$ARCH" = "aarch64" ]; then
+            target="arm64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
@@ -86,6 +90,8 @@ if ! command -v git-credential-manager &> /dev/null; then
             target="arm64"
         elif [ "$ARCH" = "x86_64" ]; then
             target="amd64"
+        elif [ "$ARCH" = "aarch64" ]; then
+            target="arm64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
