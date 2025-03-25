@@ -1,2 +1,130 @@
 #!/usr/bin/env bash
 
+# Install Antidote
+ANTIDOTE_DIR="${ZDOTDIR:-~}/.antidote"
+
+if [ ! -d "${ZDOTDIR:-~}/.antidote" ]; then
+  git clone --depth=1 https://github.com/mattmc3/antidote.git "${ANTIDOTE_DIR}"
+else
+    echo "Antidote already installed"
+fi
+
+# Detect OS and architecture
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+if [ "$ARCH" = "arm64" ]; then
+    ARCH="aarch64"
+elif [ "$ARCH" = "x86_64" ]; then
+    ARCH="amd64"
+fi
+
+# Ensure unzip is installed
+if ! command -v unzip &> /dev/null; then
+    echo "Installing unzip..."
+    if [ "$OS" = "darwin" ]; then
+        brew install unzip
+    else
+        apt-get update -yqq
+        apt-get install -y unzip
+    fi
+fi
+
+# Install AWS CLI v2
+if ! command -v aws &> /dev/null; then
+    echo "Installing AWS CLI v2..."
+    if [ "$OS" = "darwin" ]; then
+        # macOS installation
+        curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+        installer -pkg AWSCLIV2.pkg -target /
+        rm AWSCLIV2.pkg
+    else
+        # Linux installation
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        ./aws/install
+        rm -rf aws awscliv2.zip
+    fi
+else
+    echo "AWS CLI v2 is already installed"
+fi
+
+# Install the AWS Session Manager Plugin
+if ! command -v session-manager-plugin &> /dev/null; then
+    echo "Installing AWS Session Manager Plugin..."
+    if [ "$OS" = "darwin" ]; then
+        brew install session-manager-plugin
+    else
+        # Construct the appropriate URL based on architecture
+        if [ "$ARCH" = "arm64" ]; then
+            target="ubuntu_arm64"
+        else
+            target="ubuntu_64bit"
+        fi
+        SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/${target}/session-manager-plugin.deb"
+        curl "$SESSION_MANAGER_URL" -o "session-manager-plugin.deb"
+        dpkg -i session-manager-plugin.deb
+        rm session-manager-plugin.deb
+    fi
+else
+    echo "AWS Session Manager Plugin is already installed"
+fi
+
+# Install Git Credential Manager
+if ! command -v git-credential-manager &> /dev/null; then
+    echo "Installing Git Credential Manager..."
+    if [ "$OS" = "darwin" ]; then
+        # macOS installation
+        brew install --cask git-credential-manager
+    else
+        # Linux installation
+        curl -L https://aka.ms/gcm/linux-install-source.sh | sh
+        git config credential.helper 'cache --timeout=3600'
+    fi
+else
+    echo "Git Credential Manager is already installed"
+fi
+
+# Install Docker ECR Credential Helper
+if ! command -v docker-credential-helper-ecr &> /dev/null; then
+    echo "Installing Docker ECR Credential Helper..."
+    if [ "$OS" = "darwin" ]; then
+        # macOS installation
+        brew install docker-credential-helper-ecr
+    else
+        # Linux installation
+        apt-get update -yqq
+        apt-get install -y docker-credential-helper-ecr
+    fi
+else
+    echo "Docker ECR Credential Helper is already installed"
+fi
+
+# Copy dotfiles to home directory
+echo "Copying dotfiles to home directory..."
+
+# Create backup of existing files if they exist
+if [ -f "$HOME/.zshrc" ]; then
+    mv "$HOME/.zshrc" "$HOME/.zshrc.backup"
+    echo "Backed up existing .zshrc"
+fi
+
+if [ -f "$HOME/.zsh_plugins.txt" ]; then
+    mv "$HOME/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt.backup" 
+    echo "Backed up existing .zsh_plugins.txt"
+fi
+
+# Copy new files
+cp .zshrc "$HOME/.zshrc"
+cp .zsh_plugins.txt "$HOME/.zsh_plugins.txt"
+echo "Copied .zshrc and .zsh_plugins.txt to $HOME directory"
+
+# Set zsh as default shell (only on non-Darwin systems)
+if [ "$OS" != "darwin" ] && [ "$SHELL" != "$(type -p zsh)" ]; then
+    echo "Setting zsh as default shell..."
+    chsh -s "$(type -p zsh)"
+    echo "Please log out and back in for the changes to take effect"
+else
+    echo "zsh is already the default shell"
+fi
+
+exec $SHELL

@@ -22,10 +22,6 @@ export LC_CTYPE="en_US-UTF-8"
 export EDITOR="code"
 export DISABLE_MAGIC_FUNCTIONS=true
 export GROOVY_HOME="/usr/local/opt/groovy/libexec"
-export PATH="$HOME/code/work/planner/bin:$PATH"
-
-
-#export PATH="/usr/local/sbin:/usr/local/opt/grep/libexec/gnubin:$HOME/code/work/planner/bin:$PATH"
 
 source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 source <(antidote init)
@@ -84,5 +80,3 @@ fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-eval $(thefuck --alias)

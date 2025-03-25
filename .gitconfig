@@ -1,5 +1,6 @@
 [core]
 	editor   = code --wait --new-window
+	pager    = less -F
 
 [user]
 	email    = jreslock@users.noreply.github.com
