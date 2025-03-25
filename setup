@@ -56,7 +56,7 @@ if ! command -v aws &> /dev/null; then
             exit 1
         fi
         curl "https://awscli.amazonaws.com/awscli-exe-linux-${target}.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
+        unzip -qq awscliv2.zip
         ./aws/install
         rm -rf aws awscliv2.zip
     fi
@@ -110,7 +110,7 @@ if ! command -v git-credential-manager &> /dev/null; then
             exit 1
         fi
         curl "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz" -o "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
-        tar -xvf "${HOME}/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
+        tar -xf "${HOME}/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
         git config credential.helper 'cache --timeout=3600'
         rm "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
     fi
