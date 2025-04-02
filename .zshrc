@@ -20,10 +20,7 @@ export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US-UTF-8"
 export EDITOR="cursor"
-<<<<<<< Updated upstream
 export PATH=$HOME/.docker/bin:$PATH
-=======
->>>>>>> Stashed changes
 
 source $HOME/.antidote/antidote.zsh
 source <(antidote init)

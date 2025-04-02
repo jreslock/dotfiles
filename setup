@@ -125,9 +125,9 @@ if ! command -v git-credential-manager &> /dev/null; then
             exit 1
         fi
         wget "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz"
-        tar -xf "${HOME}/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
+        tar -xf "gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
         git config credential.helper 'cache --timeout=3600'
-        rm "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
+        rm "gcm-linux_${target}.2.6.1.tar.gz"
     fi
 else
     echo "Git Credential Manager is already installed"
