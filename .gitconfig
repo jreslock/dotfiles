@@ -1,5 +1,5 @@
 [core]
-	editor   = code --wait --new-window
+	editor   = cursor --wait --new-window
 	pager    = less -F
 
 [user]
@@ -19,16 +19,16 @@
     prune    = true
 
 [diff]
-	tool     = vscode
+	tool     = cursor
 
 [difftool "vscode"]
-	cmd      = code --wait --diff $LOCAL $REMOTE
+	cmd      = cursor --wait --diff $LOCAL $REMOTE
 
 [merge]
 	tool     = vscode
 
 [mergetool "vscode"]
-	cmd      = code --wait $MERGED
+	cmd      = cursor --wait $MERGED
 
 [credential]
 	helper   = /usr/local/share/gcm-core/git-credential-manager

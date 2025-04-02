@@ -19,9 +19,8 @@ fi
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US-UTF-8"
-export EDITOR="code"
-export DISABLE_MAGIC_FUNCTIONS=true
-export GROOVY_HOME="/usr/local/opt/groovy/libexec"
+export EDITOR="cursor"
+export PATH=$HOME/.docker/bin:$PATH
 
 source $HOME/.antidote/antidote.zsh
 source <(antidote init)
