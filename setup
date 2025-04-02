@@ -20,9 +20,8 @@ else
     echo "zsh already installed"
 fi
 
-# Detect OS and architecture
+# Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m)
 
 # Ensure less is installed for the git pager
 if ! command -v less &> /dev/null; then
@@ -57,12 +56,13 @@ if ! command -v aws &> /dev/null; then
         installer -pkg AWSCLIV2.pkg -target /
         rm AWSCLIV2.pkg
     else
+        ARCH=$(uname -m)
         # Linux installation
-        if [ "$ARCH" = "arm64" ]; then
+        if [ "$ARCH" == "arm64" ]; then
             target="arm64"
-        elif [ "$ARCH" = "x86_64" ]; then
+        elif [ "$ARCH" == "x86_64" ]; then
             target="x86_64"
-        elif [ "$ARCH" = "aarch64" ]; then
+        elif [ "$ARCH" == "aarch64" ]; then
             target="aarch64"
         else
             echo "Unsupported architecture: ${ARCH}"
@@ -83,13 +83,14 @@ if ! command -v session-manager-plugin &> /dev/null; then
     if [ "$OS" = "darwin" ]; then
         brew install session-manager-plugin
     else
+        ARCH=$(uname -m)
         # Construct the appropriate URL based on architecture
         # Linux installation
-        if [ "$ARCH" = "arm64" ]; then
+        if [ "$ARCH" == "arm64" ]; then
             target="arm64"
-        elif [ "$ARCH" = "x86_64" ]; then
+        elif [ "$ARCH" == "x86_64" ]; then
             target="64bit"
-        elif [ "$ARCH" = "aarch64" ]; then
+        elif [ "$ARCH" == "aarch64" ]; then
             target="arm64"
         else
             echo "Unsupported architecture: ${ARCH}"
@@ -111,18 +112,19 @@ if ! command -v git-credential-manager &> /dev/null; then
         # macOS installation
         brew install --cask git-credential-manager
     else
+        ARCH=$(uname -m)
         # Linux installation
         if [ "$ARCH" = "arm64" ]; then
             target="arm64"
-        elif [ "$ARCH" = "x86_64" ]; then
+        elif [ "$ARCH" == "x86_64" ]; then
             target="amd64"
-        elif [ "$ARCH" = "aarch64" ]; then
+        elif [ "$ARCH" == "aarch64" ]; then
             target="arm64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
         fi
-        wget -q "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz"
+        wget "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz"
         tar -xf "${HOME}/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
         git config credential.helper 'cache --timeout=3600'
         rm "${HOME}/gcm-linux_${target}.2.6.1.tar.gz"
@@ -162,7 +164,7 @@ fi
 
 # Copy new files
 mkdir -p "$HOME/.docker"
-cp "config.json" "$HOME/.docker/config.json"
-cp ".zshrc" "$HOME/.zshrc"
-cp ".zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
+cp "$HOME/dotfiles/config.json" "$HOME/.docker/"
+cp "$HOME/dotfiles/.zshrc" "$HOME/"
+cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/"
 echo "Copied .docker/config.json, .zshrc, and .zsh_plugins.txt to $HOME directory"
