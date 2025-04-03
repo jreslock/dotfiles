@@ -165,6 +165,7 @@ fi
 # Copy new files
 mkdir -p "$HOME/.docker"
 cp "$HOME/dotfiles/config.json" "$HOME/.docker/"
+cp "$HOME/dotfiles/gitconfig" "$HOME/.gitconfig"
 cp "$HOME/dotfiles/.zshrc" "$HOME/"
 cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/"
 echo "Copied .docker/config.json, .zshrc, and .zsh_plugins.txt to $HOME directory"
