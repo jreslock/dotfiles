@@ -52,9 +52,9 @@ if ! command -v aws &> /dev/null; then
     echo "Installing AWS CLI v2..."
     if [ "$OS" = "darwin" ]; then
         # macOS installation
-        curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-        installer -pkg AWSCLIV2.pkg -target /
-        rm AWSCLIV2.pkg
+        wget "https://awscli.amazonaws.com/AWSCLIV2.pkg" -P "/tmp"
+        installer -pkg /tmp/AWSCLIV2.pkg -target /
+        rm /tmp/AWSCLIV2.pkg
     else
         ARCH=$(uname -m)
         # Linux installation
@@ -68,10 +68,10 @@ if ! command -v aws &> /dev/null; then
             echo "Unsupported architecture: ${ARCH}"
             exit 1
         fi
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-${target}.zip" -o "awscliv2.zip"
-        unzip -qq awscliv2.zip
-        ./aws/install
-        rm -rf aws awscliv2.zip
+        wget "https://awscli.amazonaws.com/awscli-exe-linux-${target}.zip" -O "/tmp/awscliv2.zip"
+        unzip -qq /tmp/awscliv2.zip
+        /tmp/aws/install
+        rm -rf /tmp/aws /tmp/awscliv2.zip
     fi
 else
     echo "AWS CLI v2 is already installed"
@@ -97,9 +97,9 @@ if ! command -v session-manager-plugin &> /dev/null; then
             exit 1
         fi
         SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
-        curl "$SESSION_MANAGER_URL" -o "session-manager-plugin.deb"
-        dpkg -i session-manager-plugin.deb
-        rm session-manager-plugin.deb
+        wget -qq "$SESSION_MANAGER_URL" -P "/tmp"
+        dpkg -i /tmp/session-manager-plugin.deb
+        rm /tmp/session-manager-plugin.deb
     fi
 else
     echo "AWS Session Manager Plugin is already installed"
@@ -124,10 +124,10 @@ if ! command -v git-credential-manager &> /dev/null; then
             echo "Unsupported architecture: ${ARCH}"
             exit 1
         fi
-        wget "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz"
-        tar -xf "gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
+        wget -qq "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz" -P /tmp
+        tar -xf "/tmp/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
         git config credential.helper 'cache --timeout=3600'
-        rm "gcm-linux_${target}.2.6.1.tar.gz"
+        rm "/tmp/gcm-linux_${target}.2.6.1.tar.gz"
     fi
 else
     echo "Git Credential Manager is already installed"
