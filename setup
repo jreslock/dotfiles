@@ -69,7 +69,7 @@ if ! command -v aws &> /dev/null; then
             exit 1
         fi
         wget "https://awscli.amazonaws.com/awscli-exe-linux-${target}.zip" -O "/tmp/awscliv2.zip"
-        unzip -qq /tmp/awscliv2.zip
+        unzip -qq /tmp/awscliv2.zip -d /tmp/aws
         /tmp/aws/install
         rm -rf /tmp/aws /tmp/awscliv2.zip
     fi
