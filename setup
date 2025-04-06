@@ -14,7 +14,7 @@ if ! command -v zsh &> /dev/null; then
         brew install zsh
     else
         apt-get update -yqq
-        apt-get install -y zsh
+        apt-get install -yqq zsh
     fi
 else
     echo "zsh already installed"
@@ -30,7 +30,7 @@ if ! command -v less &> /dev/null; then
         brew install less
     else
         apt-get update -yqq
-        apt-get install -y less
+        apt-get install -yqq less
     fi
 else
     echo "less already installed"
@@ -43,7 +43,7 @@ if ! command -v unzip &> /dev/null; then
         brew install unzip
     else
         apt-get update -yqq
-        apt-get install -y unzip
+        apt-get install -yqq unzip
     fi
 fi
 
@@ -142,7 +142,7 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
     else
         # Linux installation
         apt-get update -yqq
-        apt-get install -y amazon-ecr-credential-helper
+        apt-get install -yqq amazon-ecr-credential-helper
     fi
 else
     echo "Docker ECR Credential Helper is already installed"
