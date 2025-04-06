@@ -16,9 +16,6 @@ if type "${BREW_BIN}" &> /dev/null; then
     for mandir in "${BREW_PREFIX}/opt/"*"/share/man/man1"; do export MANPATH=$mandir:$MANPATH; done
 fi
 
-export LANG="en_US.UTF-8"
-export LC_ALL="en_US.UTF-8"
-export LC_CTYPE="en_US-UTF-8"
 export EDITOR="code"
 export PATH=$HOME/.docker/bin:$PATH
 
