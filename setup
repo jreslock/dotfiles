@@ -106,31 +106,18 @@ else
 fi
 
 # Install Git Credential Manager
+# If we are using Linux it is probably a devcontainer and we don't need to install
+# gcm in a devcontainer due to the way that the ms-vscode-remote.remote-containers
+# automatically overrides the credential helper in the devcontainer and also
+# respects the local system's .gitconfig settings.
 if ! command -v git-credential-manager &> /dev/null; then
     echo "Installing Git Credential Manager..."
     if [ "$OS" = "darwin" ]; then
         # macOS installation
         brew install --cask git-credential-manager
     else
-        ARCH=$(uname -m)
-        # Linux installation
-        if [ "$ARCH" = "arm64" ]; then
-            target="arm64"
-        elif [ "$ARCH" == "x86_64" ]; then
-            target="amd64"
-        elif [ "$ARCH" == "aarch64" ]; then
-            target="arm64"
-        else
-            echo "Unsupported architecture: ${ARCH}"
-            exit 1
-        fi
-        wget -qq "https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.6.1/gcm-linux_${target}.2.6.1.tar.gz" -P /tmp
-        tar -xf "/tmp/gcm-linux_${target}.2.6.1.tar.gz" -C "/usr/local/bin"
-        git config credential.helper 'cache --timeout=3600'
-        rm "/tmp/gcm-linux_${target}.2.6.1.tar.gz"
+      echo "Git Credential Manager is already installed"
     fi
-else
-    echo "Git Credential Manager is already installed"
 fi
 
 # Install Docker ECR Credential Helper
@@ -162,10 +149,16 @@ if [ -f "$HOME/.zsh_plugins.txt" ]; then
     echo "Backed up existing .zsh_plugins.txt"
 fi
 
-# Copy new files
+# Copy new files but only copy gitconfig if we are using Darwin
+if [ "$OS" = "darwin" ];then
+  echo "Copying gitconfig to $HOME/.gitconfig"
+  cp "$HOME/dotfiles/gitconfig" "$HOME/.gitconfig"
+else
+  echo "Not Darwin, not copying gitconfig"
+fi
+
 mkdir -p "$HOME/.docker"
 cp "$HOME/dotfiles/config.json" "$HOME/.docker/"
-cp "$HOME/dotfiles/gitconfig" "$HOME/.gitconfig"
 cp "$HOME/dotfiles/.zshrc" "$HOME/"
 cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/"
 cp "$HOME/dotfiles/.p10k.zsh" "$HOME/"
