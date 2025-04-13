@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# Detect OS
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+# Detect if the system is Alpine Linux
+if [ -f /etc/alpine-release ]; then
+    OS="alpine"
+fi
+
 # Install Antidote
 if [ ! -d "${HOME}/.antidote" ]; then
   git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
@@ -12,6 +20,8 @@ if ! command -v zsh &> /dev/null; then
     echo "Installing zsh..."
     if [ "$OS" = "darwin" ]; then
         brew install zsh
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache zsh
     else
         apt-get update -yqq
         apt-get install -yqq zsh
@@ -20,14 +30,13 @@ else
     echo "zsh already installed"
 fi
 
-# Detect OS
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-
 # Ensure less is installed for the git pager
 if ! command -v less &> /dev/null; then
     echo "Installing less..."
     if [ "$OS" = "darwin" ]; then
         brew install less
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache less
     else
         apt-get update -yqq
         apt-get install -yqq less
@@ -41,10 +50,14 @@ if ! command -v unzip &> /dev/null; then
     echo "Installing unzip..."
     if [ "$OS" = "darwin" ]; then
         brew install unzip
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache unzip
     else
         apt-get update -yqq
         apt-get install -yqq unzip
     fi
+else
+    echo "unzip already installed"
 fi
 
 # Install AWS CLI v2
@@ -55,15 +68,17 @@ if ! command -v aws &> /dev/null; then
         wget "https://awscli.amazonaws.com/AWSCLIV2.pkg" -P "/tmp"
         installer -pkg /tmp/AWSCLIV2.pkg -target /
         rm /tmp/AWSCLIV2.pkg
+    elif [ "$OS" = "alpine" ]; then
+        if ! command -v aws &> /dev/null; then
+            echo "Installing AWS CLI using apk..."
+            apk add --no-cache aws-cli
+        else
+            echo "AWS CLI is already installed"
+        fi
     else
         ARCH=$(uname -m)
-        # Linux installation
-        if [ "$ARCH" == "arm64" ]; then
-            target="arm64"
-        elif [ "$ARCH" == "x86_64" ]; then
-            target="x86_64"
-        elif [ "$ARCH" == "aarch64" ]; then
-            target="aarch64"
+        if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
+            target="x86_64" # Map amd64 to x86_64 for compatibility
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
@@ -82,20 +97,19 @@ if ! command -v session-manager-plugin &> /dev/null; then
     echo "Installing AWS Session Manager Plugin..."
     if [ "$OS" = "darwin" ]; then
         brew install session-manager-plugin
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache aws-session-manager-plugin
     else
         ARCH=$(uname -m)
-        # Construct the appropriate URL based on architecture
-        # Linux installation
-        if [ "$ARCH" == "arm64" ]; then
-            target="arm64"
-        elif [ "$ARCH" == "x86_64" ]; then
+        if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
             target="64bit"
-        elif [ "$ARCH" == "aarch64" ]; then
+        elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
             target="arm64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
         fi
+
         SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
         wget -qq "$SESSION_MANAGER_URL" -P "/tmp"
         dpkg -i /tmp/session-manager-plugin.deb
@@ -127,9 +141,14 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
         # macOS installation
         brew install docker-credential-helper-ecr
     else
-        # Linux installation
+        if [ "$OS" = "alpine" ]; then
+            # Alpine Linux installation
+            apk add --no-cache docker-credential-ecr-login
+        else
+        # Ubuntu/Debian installation
         apt-get update -yqq
         apt-get install -yqq amazon-ecr-credential-helper
+        fi
     fi
 else
     echo "Docker ECR Credential Helper is already installed"
