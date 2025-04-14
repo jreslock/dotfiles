@@ -23,8 +23,8 @@ if ! command -v zsh &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache zsh
     else
-        apt-get update -yqq
-        apt-get install -yqq zsh
+        apt update -yqq
+        apt install -yqq zsh
     fi
 else
     echo "zsh already installed"
@@ -38,8 +38,8 @@ if ! command -v less &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache less
     else
-        apt-get update -yqq
-        apt-get install -yqq less
+        apt update -yqq
+        apt install -yqq less
     fi
 else
     echo "less already installed"
@@ -53,8 +53,8 @@ if ! command -v unzip &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache unzip
     else
-        apt-get update -yqq
-        apt-get install -yqq unzip
+        apt update -yqq
+        apt install -yqq unzip
     fi
 else
     echo "unzip already installed"
@@ -79,6 +79,8 @@ if ! command -v aws &> /dev/null; then
         ARCH=$(uname -m)
         if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
             target="x86_64" # Map amd64 to x86_64 for compatibility
+        elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+            target="aarch64"
         else
             echo "Unsupported architecture: ${ARCH}"
             exit 1
@@ -146,8 +148,8 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
             apk add --no-cache docker-credential-ecr-login
         else
         # Ubuntu/Debian installation
-        apt-get update -yqq
-        apt-get install -yqq amazon-ecr-credential-helper
+        apt update -yqq
+        apt install -yqq amazon-ecr-credential-helper
         fi
     fi
 else
