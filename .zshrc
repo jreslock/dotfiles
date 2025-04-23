@@ -28,6 +28,7 @@ antidote bundle < ~/.zsh_plugins.txt
 
 # aliases
 alias c="clear"
+alias clb="clean_local_branches"
 alias ssologin="unsetprofile && aws sso login --profile default"
 alias pull="git pull"
 alias push="git push"
@@ -35,7 +36,7 @@ alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias python="python3"
 alias pip="pip3"
 alias tfplf="tfp -lock=false"
-alias tflockgen="terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=darwin_arm64"
+alias tflockgen="terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
 
 # functions
 function listprofiles(){
@@ -65,6 +66,11 @@ function check_logged_in() {
     echo "Authenticating AWS SSO"
     ssologin
   fi
+}
+
+function clean_local_branches() {
+  git remote prune origin
+  git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -d
 }
 
 # Make sure we are logged into AWS SSO with a valid session
