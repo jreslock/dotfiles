@@ -29,12 +29,13 @@ antidote bundle < ~/.zsh_plugins.txt
 # aliases
 alias c="clear"
 alias clb="clean_local_branches"
-alias ssologin="unsetprofile && aws sso login --profile default"
+alias es="exec /bin/zsh"
+alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
+alias pip="pip3"
 alias pull="git pull"
 alias push="git push"
-alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias python="python3"
-alias pip="pip3"
+alias ssologin="unsetprofile && aws sso login --profile default"
 alias tfplf="tfp -lock=false"
 alias tflockgen="terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
 
