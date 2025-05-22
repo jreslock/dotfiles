@@ -77,6 +77,8 @@ function clean_local_branches() {
 # Make sure we are logged into AWS SSO with a valid session
 check_logged_in
 
+export GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token)
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi

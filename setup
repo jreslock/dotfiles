@@ -60,6 +60,21 @@ else
     echo "unzip already installed"
 fi
 
+# Install the github CLI (gh)
+if ! command -v gh &> /dev/null; then
+    echo "Installing github CLI (gh)..."
+    if [ "$OS" = "darwin" ]; then
+        brew install gh
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache github-cli
+    else
+        apt update -yqq
+        apt install -yqq gh
+    fi
+else
+    echo "github CLI (gh) is already installed"
+fi
+
 # Install AWS CLI v2
 if ! command -v aws &> /dev/null; then
     echo "Installing AWS CLI v2..."
