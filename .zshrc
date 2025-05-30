@@ -36,8 +36,8 @@ alias pull="git pull"
 alias push="git push"
 alias python="python3"
 alias ssologin="unsetprofile && aws sso login --profile default"
-alias tfplf="tfp -lock=false"
-alias tflockgen="terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
+alias ttplf="tofu plan -lock=false"
+alias ttlockgen="tofu providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
 
 # functions
 function listprofiles(){
