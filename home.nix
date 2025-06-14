@@ -1,10 +1,25 @@
 { config, pkgs, ... }:
 
 {
-  home.stateVersion = "25.05";
-  home-manager.backupFileExtension = "backup";
+  home = {
+    stateVersion = "25.05";
+    backupFileExtension = "backup";
+    
+    file.".zshrc".source = ./zsh/.zshrc;
+    file.".p10k.zsh".source = ./zsh/.p10k.zsh;
+    packages = with pkgs; [
+      antidote
+      curl
+      gh
+      jq
+      yq
+    ];
+  };
 
   disabledModules = [ "services/mako.nix" ];
+
+  # 🔗 XDG-based configs
+  xdg.configFile."docker/config.json".source = ./docker/config.json;
 
   # 🐚 Zsh and Powerlevel10k
   programs.zsh = {
@@ -15,22 +30,6 @@
       theme = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
     };
   };
-
-  # 🔗 Dotfiles
-  home.file.".zshrc".source = ./zsh/.zshrc;
-  home.file.".p10k.zsh".source = ./zsh/.p10k.zsh;
-
-  # 🔗 XDG-based configs
-  xdg.configFile."docker/config.json".source = ./docker/config.json;
-
-  # 📦 CLI tools
-  home.packages = with pkgs; [
-    antidote
-    curl
-    gh
-    jq
-    yq
-  ];
 
   # 🧠 Git config
   programs.git = {
