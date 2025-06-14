@@ -3,8 +3,14 @@
 {
   home = {
     stateVersion            = "25.05";
-    file.".zshrc".source    = ./zsh/.zshrc;
-    file.".p10k.zsh".source = ./zsh/.p10k.zsh;
+    file.".zshrc" = {
+      source    = ./zsh/.zshrc;
+      force     = true;
+    };
+    file.".p10k.zsh" = {
+      source = ./zsh/.p10k.zsh;
+      force  = true;
+    };
     packages = with pkgs; [
       antidote
       curl
@@ -17,8 +23,11 @@
   disabledModules = [ "services/mako.nix" ];
 
   # 🔗 XDG-based configs
-  xdg.configFile."docker/config.json".source = ./docker/config.json;
-
+  xdg.configFile."docker/config.json" = {
+    source = ./docker/config.json;
+    force  = true;
+  };
+  
   # 🐚 Zsh and Powerlevel10k
   programs.zsh = {
     enable     = true;
