@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  disabledModules = [ "services/mako.nix" ];
+}
+
+{
   home.stateVersion = "24.05";
 
   # 🐚 Zsh and Powerlevel10k
