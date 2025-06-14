@@ -3,7 +3,10 @@
 {
   home = {
     stateVersion = "25.05";
-    backupFileExtension = "backup";
+    
+    activation = {
+      backupFileExtension = "backup";
+    };
     
     file.".zshrc".source = ./zsh/.zshrc;
     file.".p10k.zsh".source = ./zsh/.p10k.zsh;
