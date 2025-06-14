@@ -2,6 +2,7 @@
 
 {
   home.stateVersion = "25.05";
+  home-manager.backupFileExtension = "backup";
 
   disabledModules = [ "services/mako.nix" ];
 
