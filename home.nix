@@ -3,7 +3,7 @@
 {
   home = { 
     stateVersion = "25.05";
-    manager.backupFileExtension = "backup";
+    backupFileExtension = "backup";
   };
 
   disabledModules = [ "services/mako.nix" ];
