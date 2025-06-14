@@ -2,13 +2,8 @@
 
 {
   home = {
-    stateVersion = "25.05";
-    
-    activation = {
-      backupFileExtension = "backup";
-    };
-    
-    file.".zshrc".source = ./zsh/.zshrc;
+    stateVersion            = "25.05";
+    file.".zshrc".source    = ./zsh/.zshrc;
     file.".p10k.zsh".source = ./zsh/.p10k.zsh;
     packages = with pkgs; [
       antidote
@@ -26,19 +21,18 @@
 
   # 🐚 Zsh and Powerlevel10k
   programs.zsh = {
-    enable = true;
-
-    oh-my-zsh = {
-      enable = true;
-      theme = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
+    enable     = true;
+    oh-my-zsh  = {
+      enable   = true;
+      theme    = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
     };
   };
 
   # 🧠 Git config
   programs.git = {
-    enable = true;
-    userName  = "Jason Reslock";
-    userEmail = "jreslock@users.noreply.github.com";
+    enable     = true;
+    userName   = "Jason Reslock";
+    userEmail  = "jreslock@users.noreply.github.com";
 
     extraConfig = {
       core = {
@@ -46,7 +40,7 @@
         pager  = "less -F";
       };
 
-      color.ui = "auto";
+      color.ui     = "auto";
       push.default = "current";
 
       pull = {
@@ -65,7 +59,7 @@
         tool = "code";
       };
 
-      merge.tool = "code";
+      merge.tool         = "code";
       mergetool.code.cmd = "code --wait \$MERGED";
 
       credential.helper = "/usr/local/share/gcm-core/git-credential-manager";
