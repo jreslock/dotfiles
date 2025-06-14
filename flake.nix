@@ -24,7 +24,6 @@
             {
               home.username            = "jreslock";
               home.homeDirectory       = "/Users/jreslock";
-              home.backupFileExtension = "backup";
             }
             ./home.nix
           ];
