@@ -6,17 +6,14 @@
   disabledModules = [ "services/mako.nix" ];
 
   # 🐚 Zsh and Powerlevel10k
-  programs.zsh.enable = true;
+  programs.zsh = {
+    enable = true;
 
     oh-my-zsh = {
       enable = true;
       theme = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
     };
-
-    shellAliases = {
-      ll = "ls -la";
-      gs = "git status";
-    };
+  };
 
   # 🔗 Dotfiles
   home.file.".zshrc".source = ./zsh/.zshrc;
@@ -28,10 +25,10 @@
   # 📦 CLI tools
   home.packages = with pkgs; [
     antidote
-    jq
-    yq
     curl
     gh
+    jq
+    yq
   ];
 
   # 🧠 Git config
