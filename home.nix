@@ -6,12 +6,7 @@
   disabledModules = [ "services/mako.nix" ];
 
   # 🐚 Zsh and Powerlevel10k
-  programs.zsh.syntaxHighlighting.enable
-  programs.zsh = {
-    enable = true;
-    completion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
+  programs.zsh.enable = true;
 
     oh-my-zsh = {
       enable = true;
