@@ -17,7 +17,6 @@
       ll = "ls -la";
       gs = "git status";
     };
-  };
 
   # 🔗 Dotfiles
   home.file.".zshrc".source = ./zsh/.zshrc;
