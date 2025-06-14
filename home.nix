@@ -1,16 +1,17 @@
 { config, pkgs, ... }:
 
 {
-  home.stateVersion = "24.05";
+  home.stateVersion = "25.11";
 
   disabledModules = [ "services/mako.nix" ];
 
   # 🐚 Zsh and Powerlevel10k
+  programs.zsh.syntaxHighlighting.enable
   programs.zsh = {
     enable = true;
-    enableCompletion = true;
-    enableAutosuggestions = true;
-    enableSyntaxHighlighting = true;
+    completion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
 
     oh-my-zsh = {
       enable = true;
