@@ -19,9 +19,14 @@
         name = system;
         value = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          modules = [ ./home.nix ];  # adjust path if necessary
-          username = "jreslock";
-          homeDirectory = "/Users/jreslock";
+
+          modules = [
+            {
+              home.username = "jreslock";
+              home.homeDirectory = "/Users/jreslock";
+            }
+            ./home.nix
+          ];
         };
       }) systems);
   };

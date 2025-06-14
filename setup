@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# This script sets up the environment in a new development container.
+# It installs Antidote, zsh, less, unzip, the GitHub CLI (gh), AWS CLI v2,
+# AWS Session Manager Plugin, and Git Credential Manager.
+
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -194,14 +198,14 @@ fi
 # Copy new files but only copy gitconfig if we are using Darwin
 if [ "$OS" = "darwin" ];then
   echo "Copying gitconfig to $HOME/.gitconfig"
-  cp "$HOME/dotfiles/gitconfig" "$HOME/.gitconfig"
+  cp "$HOME/dotfiles/git/gitconfig_template" "$HOME/.gitconfig"
 else
   echo "Not Darwin, not copying gitconfig"
 fi
 
 mkdir -p "$HOME/.docker"
-cp "$HOME/dotfiles/config.json" "$HOME/.docker/"
-cp "$HOME/dotfiles/.zshrc" "$HOME/"
-cp "$HOME/dotfiles/.zsh_plugins.txt" "$HOME/"
-cp "$HOME/dotfiles/.p10k.zsh" "$HOME/"
+cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
+cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
+cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
+cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
 echo "Copied .docker/config.json, .zshrc, .zsh_plugins.txt and .p10k.zsh to $HOME directory"
