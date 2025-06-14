@@ -185,6 +185,12 @@ if [ -f "$HOME/.zsh_plugins.txt" ]; then
     echo "Backed up existing .zsh_plugins.txt"
 fi
 
+# Install direnv on Darwin
+if [ "$OS" = "darwin" ];then
+  echo "Installing direnv..."
+  brew install direnv
+fi
+
 # Copy new files but only copy gitconfig if we are using Darwin
 if [ "$OS" = "darwin" ];then
   echo "Copying gitconfig to $HOME/.gitconfig"

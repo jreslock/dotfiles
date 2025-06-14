@@ -1,3 +1,4 @@
+... direnv
 darvid/zsh-poetry
 romkatv/powerlevel10k
 robbyrussell/oh-my-zsh
