@@ -2,10 +2,6 @@
 
 {
   # --- REMOVED THE 'devenv.config' WRAPPER ---
-  
-  # Explicitly disable apple.sdk to avoid the missing apple-sdk error
-  apple.sdk = null;
-  
   languages = {
     python = { enable = true; };
     go = { enable = true; };
