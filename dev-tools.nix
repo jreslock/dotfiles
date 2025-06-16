@@ -45,7 +45,7 @@
     shfmt
 
     # Cloud CLIs
-    awscli
+    awscli2
   ];
 
   env = {
