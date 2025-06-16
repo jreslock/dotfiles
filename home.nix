@@ -2,10 +2,10 @@
 
 {
   home = {
-    stateVersion            = "25.05";
+    stateVersion = "24.05";
     file.".zshrc" = {
-      source    = ./zsh/.zshrc;
-      force     = true;
+      source = ./zsh/.zshrc;
+      force  = true;
     };
     file.".p10k.zsh" = {
       source = ./zsh/.p10k.zsh;
@@ -15,12 +15,13 @@
       antidote
       curl
       gh
+      home-manager
       jq
       yq
+      direnv
+      nix-direnv
     ];
   };
-
-  disabledModules = [ "services/mako.nix" ];
 
   # 🔗 XDG-based configs
   xdg.configFile."docker/config.json" = {
@@ -28,34 +29,22 @@
     force  = true;
   };
 
-    # 🔗 XDG-based configs
-  xdg.configFile."devenv-global/devenv.nix" = {
-    source = ./devenv-global/devenv.nix;
-    force  = true;
-  };
-  
+  programs.home-manager.enable = true;
+
   # 🐚 Zsh and Powerlevel10k
   programs.zsh = {
-    enable     = true;
-    oh-my-zsh  = {
-      enable   = true;
-      theme    = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
-      initExtra = ''
-        devshell() {
-          (
-            cd ~/devenv-global # 
-            devenv shell
-          )
-        }
-      '';
+    enable = true;
+    oh-my-zsh = {
+      enable = true;
+      theme  = "romkatv/powerlevel10k";
     };
   };
 
   # 🧠 Git config
   programs.git = {
-    enable     = true;
-    userName   = "Jason Reslock";
-    userEmail  = "jreslock@users.noreply.github.com";
+    enable    = true;
+    userName  = "Jason Reslock";
+    userEmail = "jreslock@users.noreply.github.com";
 
     extraConfig = {
       core = {
@@ -63,7 +52,7 @@
         pager  = "less -F";
       };
 
-      color.ui     = "auto";
+      color.ui = "auto";
       push.default = "current";
 
       pull = {
@@ -85,7 +74,14 @@
       merge.tool         = "code";
       mergetool.code.cmd = "code --wait \$MERGED";
 
-      credential.helper = "/usr/local/share/gcm-core/git-credential-manager";
+      credential.helper = "gh";
     };
   };
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
+  disabledModules = [ "services/mako.nix" ];
 }
