@@ -27,6 +27,12 @@
     source = ./docker/config.json;
     force  = true;
   };
+
+    # 🔗 XDG-based configs
+  xdg.configFile."devenv-global/devenv.nix" = {
+    source = ./devenv-global/devenv.nix;
+    force  = true;
+  };
   
   # 🐚 Zsh and Powerlevel10k
   programs.zsh = {
@@ -34,6 +40,14 @@
     oh-my-zsh  = {
       enable   = true;
       theme    = "romkatv/powerlevel10k"; # Will load from $ZSH_CUSTOM/themes if present
+      initExtra = ''
+        devshell() {
+          (
+            cd ~/devenv-global # 
+            devenv shell
+          )
+        }
+      '';
     };
   };
 
