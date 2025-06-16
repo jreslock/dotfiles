@@ -36,17 +36,19 @@
           modules = commonHomeManagerModules ++ [
             {
               # Inherit the username from the outer scope
-              home.inherit username;
+              home = { 
+                username = username;
               # Dynamically set homeDirectory based on system for Linux/macOS
               # On Linux, typically /home/<username>
               # On macOS, typically /Users/<username>
-              home.homeDirectory = if builtins.match ".*-linux" system != null
+              homeDirectory = if builtins.match ".*-linux" system != null
                                   then "/home/${username}"
                                   else "/Users/${username}";
 
               # Crucial: Set stateVersion matching your Nixpkgs release
               # This example uses 24.05, adjust if you use a different stable version
-              home.stateVersion = "24.05";
+              stateVersion = "24.05";
+            };
             }
           ];
         };
