@@ -2,16 +2,15 @@
   description = "jreslock dotfiles with home-manager";
 
   inputs = {
-    nixpkgs.url  = "github:NixOS/nixpkgs/nixos-24.05"; # Changed to 24.05 stable branch
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05"; # Current stable branch
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.05"; # Match nixpkgs stable branch
+      url = "github:nix-community/home-manager/release-24.05"; # Match nixpkgs branch
       inputs.nixpkgs.follows = "nixpkgs"; # Ensure HM uses the same Nixpkgs
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }: # @ inputs is optional, but doesn't hurt
     let
-      # Define your username - this remains constant across your machines
       username = "jreslock";
 
       # Define a common Home Manager module that contains most of your config
@@ -20,62 +19,85 @@
         # Add any other common modules here, e.g., ./modules/git.nix, ./modules/zsh.nix
       ];
 
-      # --- Define a system-specific pkgs for the current system ---
-      # This 'pkgs' will be used for devShells and the default homeConfiguration
-      # It's imported once at the top level of the 'outputs' let-block.
-      pkgs = import nixpkgs {
-        system = builtins.currentSystem; # Import pkgs for the system where the flake is being evaluated
+      # A list of all systems you intend to support.
+      supportedSystems = [
+        "x86_64-darwin"
+        "aarch64-darwin"
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      # Helper to create an instance of Nixpkgs for a given system
+      # This is crucial for *building* packages for a target system.
+      mkPkgsForSystem = system: import nixpkgs {
+        inherit system;
         config = {
           allowUnfree = true;
         };
       };
 
-      # A helper function to create a homeManagerConfiguration for a given system
-      mkHomeConfig = system:
-        let
-          # IMPORTANT: This 'pkgs' is specific to the *target system* of the Home Manager config.
-          # It's crucial for cross-compilation if you were building for other systems.
-          # It's distinct from the top-level 'pkgs' which is for the *current system*.
-          hmPkgs = import nixpkgs {
-            inherit system;
-            config = {
-              allowUnfree = true;
-            };
-          };
-        in
-        home-manager.lib.homeManagerConfiguration {
-          pkgs = hmPkgs; # Use hmPkgs here for the Home Manager configuration
-          modules = commonHomeManagerModules ++ [
-            {
-              home = {
-                username = username;
-                homeDirectory = if builtins.match ".*-linux" system != null
-                                then "/home/${username}"
-                                else "/Users/${username}";
-
-                stateVersion = "24.05";
-              };
-            }
-          ];
-        };
-
     in {
-      # Define specific homeConfigurations for each supported system
-      homeConfigurations."${username}-aarch64-darwin" = mkHomeConfig "aarch64-darwin";
-      homeConfigurations."${username}-x86_64-darwin" = mkHomeConfig "x86_64-darwin";
-      homeConfigurations."${username}-aarch64-linux" = mkHomeConfig "aarch64-linux";
-      homeConfigurations."${username}-x86_64-linux" = mkHomeConfig "x86_64-linux";
-
-      # OPTIONAL BUT RECOMMENDED: Provide a 'default' configuration that
-      # automatically detects the current system.
-      homeConfigurations."${username}" = mkHomeConfig builtins.currentSystem;
-
-      # You can also add devShells here if you need them for building/developing your dotfiles flake itself
-      # Now, 'pkgs' from the top-level let-block is in scope here.
-      devShells.${builtins.currentSystem}.default = pkgs.mkShell {
-        packages = [ pkgs.nixpkgs-fmt ]; # Example: a formatter for your Nix files
+      # This is the PRIMARY homeConfiguration for your user.
+      # It leverages `builtins.currentSystem` directly at the top-level output.
+      # This is what `home-manager switch --flake .#jreslock` expects.
+      homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
+        pkgs = mkPkgsForSystem builtins.currentSystem; # pkgs for the CURRENT system
+        modules = commonHomeManagerModules ++ [
+          {
+            home = {
+              inherit username;
+              homeDirectory = if builtins.match ".*-linux" builtins.currentSystem != null
+                              then "/home/${username}"
+                              else "/Users/${username}";
+              stateVersion = "24.05";
+            };
+          }
+        ];
       };
-      # If you need devShells for other specific systems (e.g., cross-compilation devShells)
-      # devShells.aarch64-darwin.specific = mkShell "aarch64-darwin" { packages = [ pkgs.my-arm-tool ]; };
+
+      # OPTIONAL: You can still define explicit configurations for specific systems
+      # if you ever need to specifically build for or target them (e.g. cross-build)
+      # or if you have system-specific overrides that cannot be handled by the single common config.
+      # These would be accessed via `home-manager switch --flake .#jreslock-aarch64-darwin`
+      # homeConfigurations."${username}-aarch64-darwin" = home-manager.lib.homeManagerConfiguration {
+      #   pkgs = mkPkgsForSystem "aarch64-darwin";
+      #   modules = commonHomeManagerModules ++ [
+      #     {
+      #       home = {
+      #         inherit username;
+      #         homeDirectory = "/Users/${username}"; # Explicit for macOS
+      #         stateVersion = "24.05";
+      #       };
+      #     }
+      #     # Any aarch64-darwin specific modules here
+      #   ];
+      # };
+      # homeConfigurations."${username}-x86_64-linux" = home-manager.lib.homeManagerConfiguration {
+      #   pkgs = mkPkgsForSystem "x86_64-linux";
+      #   modules = commonHomeManagerModules ++ [
+      #     {
+      #       home = {
+      #         inherit username;
+      #         homeDirectory = "/home/${username}"; # Explicit for Linux
+      #         stateVersion = "24.05";
+      #       };
+      #     }
+      #     # Any x86_64-linux specific modules here
+      #   ];
+      # };
+
+      # Development shells for *your* dotfiles repository
+      # This is for developing your Nix configs, not your general project work.
+      # It leverages `builtins.currentSystem` implicitly for convenience.
+      devShells.${builtins.currentSystem}.default = mkPkgsForSystem builtins.currentSystem.mkShell {
+        packages = [
+          (mkPkgsForSystem builtins.currentSystem).nixpkgs-fmt # Nix formatter
+          (mkPkgsForSystem builtins.currentSystem).git         # git is often useful in devShells
+          # Add other tools needed for developing this flake itself (e.g., specific Nix tools)
+        ];
+        # shellHook = ''
+        #   echo "Entering dotfiles dev shell for ${builtins.currentSystem}"
+        # '';
+      };
     };
 }
