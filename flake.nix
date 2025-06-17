@@ -15,20 +15,22 @@
       system = builtins.currentSystem or "x86_64-linux";
       username = "jreslock";
     in {
-      homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs { inherit system; };
-        modules = [
-          ./home.nix
-          {
-            home = {
-              inherit username;
-              homeDirectory = if builtins.match ".*-linux" system != null
-                              then "/home/${username}"
-                              else "/Users/${username}";
-              stateVersion = "24.05";
-            };
-          }
-        ];
-      };
+      homeConfigurations = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux" ] (system:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs { inherit system; };
+          modules = [
+            ./home.nix
+            {
+              home = {
+                inherit username;
+                homeDirectory = if builtins.match ".*-linux" system != null
+                                then "/home/${username}"
+                                else "/Users/${username}";
+                stateVersion = "24.05";
+              };
+            }
+          ];
+        } 
+      );
     };
 }
