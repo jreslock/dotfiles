@@ -13,14 +13,38 @@
     };
     packages = with pkgs; [
       antidote
+      awscli2
       curl
       direnv
       gh
-      git
       home-manager
       jq
       nix-direnv
+      wget
       yq
+      
+      # IaC Tools
+      opentofu
+      tenv
+      terraform-docs
+
+      # Containerization
+      docker-buildx
+      docker-client
+
+      # Build and Task Automation
+      go-task
+
+      # Git and Release Management Tools
+      git
+      git-chglog
+      goreleaser
+      svu
+
+      # Code Quality & Formatting
+      pre-commit
+      shellcheck
+      shfmt
     ];
   };
 
