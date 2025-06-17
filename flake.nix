@@ -12,7 +12,7 @@
   # Remove nix-darwin from the arguments
   outputs = inputs@{ self, nixpkgs, home-manager, ... }:
     let
-      system = builtins.currentSystem;
+      system = builtins.currentSystem or "x86_64-linux";
       username = "jreslock";
     in {
       homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
