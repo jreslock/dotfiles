@@ -63,6 +63,7 @@
               inputs = inputs // { inherit self; };
               pkgs = mkPkgsForSystem system;
               modules = [
+                { devenv.root = ./.; }
                 ./dev-tools.nix
               ];
             };
