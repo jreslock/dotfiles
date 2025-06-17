@@ -15,6 +15,7 @@
       antidote
       curl
       gh
+      git
       home-manager
       jq
       yq

@@ -31,6 +31,7 @@
     curl
 
     # Git and Release Management Tools
+    git
     git-chglog
     goreleaser
     svu
