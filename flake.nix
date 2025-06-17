@@ -10,9 +10,8 @@
   };
 
   # Remove nix-darwin from the arguments
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }:
+  outputs = inputs@{ self, nixpkgs, home-manager, ... }@inputs:
     let
-      system = builtins.currentSystem or "x86_64-linux";
       username = "jreslock";
     in {
       homeConfigurations = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux" ] (system:
