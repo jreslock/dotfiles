@@ -14,13 +14,13 @@
     packages = with pkgs; [
       antidote
       curl
+      direnv
       gh
       git
       home-manager
       jq
-      yq
-      direnv
       nix-direnv
+      yq
     ];
   };
 
