@@ -2,7 +2,7 @@
 
 {
   home = {
-    stateVersion = "25.11";
+    stateVersion = "24.05";
     file.".zshrc" = {
       source = ./zsh/.zshrc;
       force  = true;

@@ -25,7 +25,7 @@
               homeDirectory = if builtins.match ".*-linux" system != null
                               then "/home/${username}"
                               else "/Users/${username}";
-              stateVersion = "24.11";
+              stateVersion = "24.05";
             };
           }
         ];
