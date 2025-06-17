@@ -63,7 +63,7 @@
               inputs = inputs // { inherit self; };
               pkgs = mkPkgsForSystem system;
               modules = [
-                { devenv.root = toString ./.; }
+                { devenv.root = builtins.getEnv "DEVENV_PROJECT_ROOT"; }
                 ./dev-tools.nix
               ];
             };
