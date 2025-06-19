@@ -9,27 +9,33 @@
     };
   };
 
-  # Remove nix-darwin from the arguments
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
-    let
-      username = "jreslock";
-    in {
-      homeConfigurations = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux" ] (system:
+  outputs = { self, nixpkgs, home-manager, ... }: {
+    homeConfigurations = nixpkgs.lib.genAttrs [
+      "jreslock@aarch64-darwin"
+      "jreslock@x86_64-darwin"
+      "jreslock@x86_64-linux"
+      "jreslock@aarch64-linux"
+    ] (name:
+      let
+        parts = builtins.match "([^@]+)@(.+)" name;
+        username = builtins.elemAt parts 0;
+        system = builtins.elemAt parts 1;
+        homeDirectory = if builtins.match ".*-linux" system != null
+                        then "/home/${username}"
+                        else "/Users/${username}";
+      in
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs { inherit system; };
           modules = [
             ./home.nix
             {
               home = {
-                inherit username;
-                homeDirectory = if builtins.match ".*-linux" system != null
-                                then "/home/${username}"
-                                else "/Users/${username}";
+                inherit username homeDirectory;
                 stateVersion = "24.05";
               };
             }
           ];
-        } 
-      );
-    };
+        }
+    );
+  };
 }
