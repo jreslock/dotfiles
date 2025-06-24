@@ -34,6 +34,3 @@
 
 [mergetool "code"]
 	cmd      = code --wait $MERGED
-
-[credential]
-	helper	 = /usr/local/share/gcm-core/git-credential-manager

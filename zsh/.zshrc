@@ -70,9 +70,6 @@ function check_logged_in() {
   fi
 }
 
-# Enable flakes and new nix things
-export NIX_CONFIG="experimental-features = nix-command flakes"
-
 function clean_local_branches() {
   git remote prune origin
   git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -d

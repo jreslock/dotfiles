@@ -140,21 +140,6 @@ else
     echo "AWS Session Manager Plugin is already installed"
 fi
 
-# Install Git Credential Manager
-# If we are using Linux it is probably a devcontainer and we don't need to install
-# gcm in a devcontainer due to the way that the ms-vscode-remote.remote-containers
-# automatically overrides the credential helper in the devcontainer and also
-# respects the local system's .gitconfig settings.
-if ! command -v git-credential-manager &> /dev/null; then
-    echo "Installing Git Credential Manager..."
-    if [ "$OS" = "darwin" ]; then
-        # macOS installation
-        brew install --cask git-credential-manager
-    else
-      echo "Git Credential Manager is already installed"
-    fi
-fi
-
 # Install Docker ECR Credential Helper
 if ! command -v docker-credential-ecr-login &> /dev/null; then
     echo "Installing Docker ECR Credential Helper..."
