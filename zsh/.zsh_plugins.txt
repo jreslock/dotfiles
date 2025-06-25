@@ -3,15 +3,9 @@ romkatv/powerlevel10k
 robbyrussell/oh-my-zsh
 robbyrussell/oh-my-zsh path:lib
 robbyrussell/oh-my-zsh path:plugins/aws
-robbyrussell/oh-my-zsh path:plugins/brew
 robbyrussell/oh-my-zsh path:plugins/common-aliases
-robbyrussell/oh-my-zsh path:plugins/compleat
 robbyrussell/oh-my-zsh path:plugins/docker
-robbyrussell/oh-my-zsh path:plugins/encode64
 robbyrussell/oh-my-zsh path:plugins/git
 robbyrussell/oh-my-zsh path:plugins/git-extras
-robbyrussell/oh-my-zsh path:plugins/jsontools
+robbyrussell/oh-my-zsh path:plugins/homebrew
 robbyrussell/oh-my-zsh path:plugins/opentofu
-zsh-users/zsh-completions
-zsh-users/zsh-syntax-highlighting
-zsh-users/zsh-history-substring-search

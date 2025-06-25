@@ -1,8 +1,6 @@
 autoload -U +X bashcompinit && bashcompinit
 autoload -U +X compinit && compinit
 
-fpath=($fpath ~/.zsh/completion)
-
 BREW_BIN="/usr/local/bin/brew"
 if [ -f "/opt/homebrew/bin/brew" ]; then
     BREW_BIN="/opt/homebrew/bin/brew"
@@ -29,7 +27,8 @@ antidote bundle < ~/.zsh_plugins.txt
 # aliases
 alias c="clear"
 alias clb="clean_local_branches"
-alias es="exec /bin/zsh"
+alias es="exec zsh"
+alias gitauth="gh auth login setup-git"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias pip="pip3"
 alias pull="git pull"
