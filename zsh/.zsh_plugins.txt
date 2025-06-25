@@ -7,5 +7,4 @@ robbyrussell/oh-my-zsh path:plugins/common-aliases
 robbyrussell/oh-my-zsh path:plugins/docker
 robbyrussell/oh-my-zsh path:plugins/git
 robbyrussell/oh-my-zsh path:plugins/git-extras
-robbyrussell/oh-my-zsh path:plugins/homebrew
 robbyrussell/oh-my-zsh path:plugins/opentofu

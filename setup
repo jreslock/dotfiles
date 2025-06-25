@@ -183,10 +183,17 @@ fi
 # Copy new files but only copy gitconfig if we are using Darwin
 if [ "$OS" = "darwin" ];then
   echo "Copying gitconfig to $HOME/.gitconfig"
-  cp "$HOME/dotfiles/git/gitconfig_template" "$HOME/.gitconfig"
+  cp "./git/gitconfig_template" "$HOME/.gitconfig"
+  echo "Copying zsh/.zshrc to $HOME/.zshrc"
+  cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
+  echo "Copying zsh/.zsh_plugins.txt to $HOME/.zsh_plugins.txt"
+  cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
+  echo "Copying zsh/.p10k.zsh to $HOME/.p10k.zsh"
+  cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
 else
   echo "Not Darwin, not copying gitconfig"
 fi
+
 
 mkdir -p "$HOME/.docker"
 cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
