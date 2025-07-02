@@ -182,22 +182,24 @@ fi
 
 # Copy new files but only copy gitconfig if we are using Darwin
 if [ "$OS" = "darwin" ];then
-  echo "Copying gitconfig to $HOME/.gitconfig"
-  cp "./git/gitconfig_template" "$HOME/.gitconfig"
-  echo "Copying zsh/.zshrc to $HOME/.zshrc"
-  cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
-  echo "Copying zsh/.zsh_plugins.txt to $HOME/.zsh_plugins.txt"
-  cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
-  echo "Copying zsh/.p10k.zsh to $HOME/.p10k.zsh"
-  cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
+    echo "Copying zsh/.zshrc to $HOME/.zshrc"
+    cp "./zsh/.zshrc" "$HOME/"
+    echo "Copying zsh/.zsh_plugins.txt to $HOME/.zsh_plugins.txt"
+    cp "./zsh/.zsh_plugins.txt" "$HOME/"
+    echo "Copying zsh/.p10k.zsh to $HOME/.p10k.zsh"
+    cp "./zsh/.p10k.zsh" "$HOME/"
+    echo "Copying code to /usr/local/bin/code"
+    cp "./zsh/cmd/code" "/usr/local/bin/code"
+    echo "Copying code to /usr/local/bin/cursor"
+    cp "./zsh/cmd/code" "/usr/local/bin/cursor"
 else
-  echo "Not Darwin, not copying gitconfig"
+    mkdir -p "$HOME/.docker"
+    cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
+    cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
+    cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
+    cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
+    cp "$HOME/dotfiles/zsh/cmd/code" "/usr/local/bin/code"
+    cp "$HOME/dotfiles/zsh/cmd/code" "/usr/local/bin/cursor"
+    echo "Copied .docker/config.json, .zshrc, .zsh_plugins.txt, .p10k.zsh to $HOME directory"
+    echo "Installed code and cursor commands to /usr/local/bin/code and /usr/local/bin/cursor"
 fi
-
-
-mkdir -p "$HOME/.docker"
-cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
-cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
-cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
-cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
-echo "Copied .docker/config.json, .zshrc, .zsh_plugins.txt and .p10k.zsh to $HOME directory"
