@@ -200,9 +200,9 @@ if [ "$OS" = "darwin" ]; then
     sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
     sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
 else
-    sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
-    sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
-    sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
+    cp "./zsh/cmd/code" "/usr/local/bin/code"
+    cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+    chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
 fi
 
 # Copy docker config for non-macOS systems
