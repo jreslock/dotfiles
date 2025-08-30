@@ -4,6 +4,9 @@
 # It installs Antidote, zsh, less, unzip, the GitHub CLI (gh), AWS CLI v2,
 # AWS Session Manager Plugin, and Git Credential Manager.
 
+# Exit on any error
+set -e
+
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -12,11 +15,16 @@ if [ -f /etc/alpine-release ]; then
     OS="alpine"
 fi
 
+echo "Detected OS: $OS"
+
 # Install Antidote
+echo "Installing Antidote..."
 if [ ! -d "${HOME}/.antidote" ]; then
   git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
+  echo "Antidote installed successfully"
 else
-    echo "Antidote already installed"
+    echo "Antidote already installed, updating..."
+    cd "${HOME}/.antidote" && git pull --quiet && cd - > /dev/null
 fi
 
 # Install zsh
@@ -174,27 +182,35 @@ if [ -f "$HOME/.zsh_plugins.txt" ]; then
     echo "Backed up existing .zsh_plugins.txt"
 fi
 
+if [ -f "$HOME/.p10k.zsh" ]; then
+    mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh.backup"
+    echo "Backed up existing .p10k.zsh"
+fi
 
-# Copy new files but only copy gitconfig if we are using Darwin
-if [ "$OS" = "darwin" ];then
-    echo "Copying zsh/.zshrc to $HOME/.zshrc"
-    cp "./zsh/.zshrc" "$HOME/"
-    echo "Copying zsh/.zsh_plugins.txt to $HOME/.zsh_plugins.txt"
-    cp "./zsh/.zsh_plugins.txt" "$HOME/"
-    echo "Copying zsh/.p10k.zsh to $HOME/.p10k.zsh"
-    cp "./zsh/.p10k.zsh" "$HOME/"
-    echo "Copying code to /usr/local/bin/code"
-    cp "./zsh/cmd/code" "/usr/local/bin/code"
-    echo "Copying code to /usr/local/bin/cursor"
-    cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+# Copy new files
+echo "Copying zsh configuration files..."
+cp "./zsh/.zshrc" "$HOME/"
+cp "./zsh/.zsh_plugins.txt" "$HOME/"
+cp "./zsh/.p10k.zsh" "$HOME/"
+
+# Copy code/cursor commands
+echo "Installing code and cursor commands..."
+if [ "$OS" = "darwin" ]; then
+    sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
+    sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+    sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
 else
+    sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
+    sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+    sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
+fi
+
+# Copy docker config for non-macOS systems
+if [ "$OS" != "darwin" ]; then
     mkdir -p "$HOME/.docker"
     cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
-    cp "$HOME/dotfiles/zsh/.zshrc" "$HOME/"
-    cp "$HOME/dotfiles/zsh/.zsh_plugins.txt" "$HOME/"
-    cp "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/"
-    cp "$HOME/dotfiles/zsh/cmd/code" "/usr/local/bin/code"
-    cp "$HOME/dotfiles/zsh/cmd/code" "/usr/local/bin/cursor"
-    echo "Copied .docker/config.json, .zshrc, .zsh_plugins.txt, .p10k.zsh to $HOME directory"
-    echo "Installed code and cursor commands to /usr/local/bin/code and /usr/local/bin/cursor"
+    echo "Copied .docker/config.json"
 fi
+
+echo "Dotfiles installation completed successfully!"
+echo "Please restart your shell or run 'source ~/.zshrc' to apply changes."

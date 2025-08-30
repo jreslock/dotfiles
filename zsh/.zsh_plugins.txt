@@ -8,4 +8,5 @@ robbyrussell/oh-my-zsh path:plugins/docker
 robbyrussell/oh-my-zsh path:plugins/git
 robbyrussell/oh-my-zsh path:plugins/git-extras
 robbyrussell/oh-my-zsh path:plugins/opentofu
+robbyrussell/oh-my-zsh path:plugins/uv
 zsh-users/zsh-syntax-highlighting
