@@ -16,12 +16,12 @@ if [[ "$OSTYPE" == darwin* && -z "$BREW_PREFIX" ]]; then
     elif [[ -x "/usr/local/bin/brew" ]]; then
         export BREW_PREFIX="/usr/local"
     fi
-    
+
     if [[ -n "$BREW_PREFIX" ]]; then
         # Add core homebrew paths
         path=("$BREW_PREFIX/bin" "$BREW_PREFIX/sbin" $path)
         export MANPATH="$BREW_PREFIX/share/man:$MANPATH"
-        
+
         # Add common opt packages (only if they exist)
         [[ -d "$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" ]] && path=("$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" $path)
         [[ -d "$BREW_PREFIX/opt/coreutils/libexec/gnubin" ]] && path=("$BREW_PREFIX/opt/coreutils/libexec/gnubin" $path)
@@ -34,19 +34,19 @@ path=("$HOME/.docker/bin" "$HOME/.local/bin" $path)
 # Load antidote plugin manager (with error handling)
 if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     source "$HOME/.antidote/antidote.zsh"
-    
+
     # Initialize antidote
     source <(antidote init)
-    
+
     # Set ZSH to antidote's oh-my-zsh installation
     ANTIDOTE_HOME="$(antidote home)"
     export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh"
-    
+
     # Load plugins from .zsh_plugins.txt
     if [[ -f ~/.zsh_plugins.txt ]]; then
         antidote bundle < ~/.zsh_plugins.txt
     fi
-    
+
     # Conditionally load brew plugin only on macOS
     if [[ "$OSTYPE" == darwin* ]]; then
         antidote bundle robbyrussell/oh-my-zsh path:plugins/brew
@@ -86,7 +86,7 @@ function unsetprofile() {
 
 function get_account_id() {
   unset AWS_PROFILE
-  aws sts get-caller-identity --query Account --output text --no-cli-pager --profile $1 
+  aws sts get-caller-identity --query Account --output text --no-cli-pager --profile $1
 }
 
 function check_logged_in() {
@@ -131,13 +131,13 @@ function ca() {
         # The first argument IS a UUID, so we resume.
         local uuid="$1"
         local user_message="${@:2}" # The message is everything after the UUID
-        
+
         echo "Resuming thread: $uuid"
         cursor-agent --resume="$uuid" "$user_message"
     else
         # The first argument is NOT a UUID, so we start a new chat.
         local user_message="$*" # The message is the entire command line
-        
+
         echo "Starting new thread with persona..."
         local full_message
         full_message="$(cat "$PERSONA_FILE")
@@ -164,9 +164,9 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Cursor Agent shell integration (with proper path check)
-if [[ -o interactive ]] && [[ -x "$HOME/.local/bin/cursor-agent" ]]; then
-  eval "$(~/.local/bin/cursor-agent shell-integration zsh)"
-fi
+#if [[ -o interactive ]] && [[ -x "$HOME/.local/bin/cursor-agent" ]]; then
+#  eval "$(~/.local/bin/cursor-agent shell-integration zsh)"
+#fi
 
 # Load Powerlevel10k configuration
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
