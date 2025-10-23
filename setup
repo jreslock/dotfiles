@@ -192,6 +192,7 @@ echo "Copying zsh configuration files..."
 cp "./zsh/.zshrc" "$HOME/"
 cp "./zsh/.zsh_plugins.txt" "$HOME/"
 cp "./zsh/.p10k.zsh" "$HOME/"
+cp "./tmux/.tmux.conf" "$HOME/"
 
 # Copy code/cursor commands
 echo "Installing code and cursor commands..."
