@@ -103,50 +103,6 @@ function clean_local_branches() {
   git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -d
 }
 
-# Cursor Agent function (preserved exactly as it was)
-function ca() {
-    # --- Configuration ---
-    local PERSONA_FILE="$HOME/.config/cursor/AGENTS.md"
-
-    # --- Pre-flight Check ---
-    if [[ ! -f "$PERSONA_FILE" ]]; then
-        echo "Persona file not found at $PERSONA_FILE" >&2
-        return 1
-    fi
-
-    # --- Argument Handling ---
-    if [[ $# -eq 0 ]]; then
-        echo "Usage:"
-        echo "  ca <uuid> \"<message>\"     # Resume an existing thread"
-        echo "  ca \"<first_message>\"      # Start a new thread"
-        return 1
-    fi
-
-    local first_arg="$1"
-    # This regex matches the standard UUID format (e.g., af756db5-ba87-4d1d-a725-667ba062e014)
-    local uuid_regex='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-
-    # --- Core Logic ---
-    if [[ "$first_arg" =~ $uuid_regex ]]; then
-        # The first argument IS a UUID, so we resume.
-        local uuid="$1"
-        local user_message="${@:2}" # The message is everything after the UUID
-
-        echo "Resuming thread: $uuid"
-        cursor-agent --resume="$uuid" "$user_message"
-    else
-        # The first argument is NOT a UUID, so we start a new chat.
-        local user_message="$*" # The message is the entire command line
-
-        echo "Starting new thread with persona..."
-        local full_message
-        full_message="$(cat "$PERSONA_FILE")
-
-${user_message}"
-        cursor-agent "$full_message"
-    fi
-}
-
 # Simple AWS SSO check - only once per session, no complex locking
 if [[ -o interactive ]] && command -v aws &> /dev/null && [[ -z "$AWS_CHECK_DONE" ]]; then
   export AWS_CHECK_DONE=1
