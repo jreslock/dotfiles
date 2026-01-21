@@ -87,19 +87,47 @@ fi
 # Install Docker ECR Credential Helper
 if ! command -v docker-credential-ecr-login &> /dev/null; then
     echo "Installing Docker ECR Credential Helper..."
-    if [ "$OS" = "darwin" ]; then
-        # macOS installation
-        brew install docker-credential-helper-ecr
+    
+    # Detect architecture
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
+        ecr_arch="amd64"
+    elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+        ecr_arch="arm64"
     else
-        if [ "$OS" = "alpine" ]; then
-            # Alpine Linux installation
-            apk add --no-cache docker-credential-ecr-login
-        else
-        # Ubuntu/Debian installation
-        apt update -yqq
-        apt install -yqq amazon-ecr-credential-helper
-        fi
+        echo "Unsupported architecture: ${ARCH}"
+        exit 1
     fi
+    
+    # Map OS to S3 format
+    if [ "$OS" = "darwin" ]; then
+        ecr_os="darwin"
+    elif [ "$OS" = "alpine" ] || [ "$OS" = "linux" ]; then
+        ecr_os="linux"
+    else
+        echo "Unsupported OS: ${OS}"
+        exit 1
+    fi
+    
+    # ECR Credential Helper version
+    ECR_CRED_HELPER_VERSION="0.11.0"
+    
+    # Download binary from S3
+    ECR_URL="https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${ECR_CRED_HELPER_VERSION}/${ecr_os}-${ecr_arch}/docker-credential-ecr-login"
+    TMP_BINARY="/tmp/docker-credential-ecr-login"
+    
+    echo "Downloading Docker ECR Credential Helper for ${ecr_os}-${ecr_arch}..."
+    curl -fSL "$ECR_URL" -o "$TMP_BINARY"
+    
+    # Make executable and install
+    chmod +x "$TMP_BINARY"
+    if [ "$OS" = "darwin" ]; then
+        sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
+    else
+        mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
+    fi
+    
+    echo "Docker ECR Credential Helper installed successfully"
 else
     echo "Docker ECR Credential Helper is already installed"
 fi
