@@ -49,7 +49,7 @@ detect_arch() {
 # uv (Astral)
 # ------------------------------------------------------------
 log "Installing uv..."
-curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install Antidote
 log "Installing Antidote..."
@@ -69,8 +69,8 @@ if ! command -v zsh &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache zsh
     else
-        apt update -yqq
-        apt install -yqq zsh
+        sudo apt update -yqq
+        sudo apt install -yqq zsh
     fi
 else
     log "zsh already installed"
@@ -84,8 +84,8 @@ if ! command -v less &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache less
     else
-        apt update -yqq
-        apt install -yqq less
+        sudo apt update -yqq
+        sudo apt install -yqq less
     fi
 else
     log "less already installed"
@@ -132,7 +132,7 @@ if ! command -v session-manager-plugin >/dev/null 2>&1; then
 
         SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
         wget -qq "$SESSION_MANAGER_URL" -P "/tmp"
-        dpkg -i /tmp/session-manager-plugin.deb
+        sudo dpkg -i /tmp/session-manager-plugin.deb
         rm /tmp/session-manager-plugin.deb
     fi
 else
@@ -171,7 +171,7 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
     if [ "$OS" = "darwin" ]; then
         sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
     else
-        mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
+        sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
     fi
     
     log "Docker ECR Credential Helper installed successfully"
