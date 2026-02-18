@@ -5,7 +5,15 @@
 # AWS Session Manager Plugin, and Git Credential Manager.
 
 # Exit on any error
-set -e
+set -euo pipefail
+
+log() { echo "[$(date -Is)] $*"; }
+
+# Enforce running from the dotfiles repo dir only
+if [ "$(pwd)" != "dotfiles" ]; then
+  log "Please run from the root of the dotfiles repository"
+  exit 1
+fi
 
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -16,6 +24,12 @@ if [ -f /etc/alpine-release ]; then
 fi
 
 echo "Detected OS: $OS"
+
+# ------------------------------------------------------------
+# uv (Astral)
+# ------------------------------------------------------------
+log "Installing uv..."
+curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install Antidote
 echo "Installing Antidote..."
@@ -56,6 +70,25 @@ if ! command -v less &> /dev/null; then
 else
     echo "less already installed"
 fi
+
+# ------------------------------------------------------------
+# AWS CLI v2
+# ------------------------------------------------------------
+log "Installing AWS CLI v2..."
+
+TMP_DIR="$(mktemp -d)"
+cd "$TMP_DIR"
+
+curl -fsSLo awscliv2.zip \
+  "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
+
+unzip -q awscliv2.zip
+./aws/install --update
+
+cd /
+rm -rf "$TMP_DIR"
+
+aws --version
 
 # Install the AWS Session Manager Plugin
 if ! command -v session-manager-plugin &> /dev/null; then
@@ -152,29 +185,29 @@ if [ -f "$HOME/.p10k.zsh" ]; then
 fi
 
 # Copy new files
-echo "Copying zsh configuration files..."
-cp "./zsh/.zshrc" "$HOME/"
-cp "./zsh/.zsh_plugins.txt" "$HOME/"
-cp "./zsh/.p10k.zsh" "$HOME/"
-cp "./tmux/.tmux.conf" "$HOME/"
+echo "Installing/symlinking zsh configuration files..."
+ln -s "$(pwd)/zsh/.zshrc" "$HOME/.zshrc"
+ln -s "$(pwd)/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
+ln -s "$(pwd)/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+ln -s "$(pwd)/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # Copy code/cursor commands
-echo "Installing code and cursor commands..."
-if [ "$OS" = "darwin" ]; then
-    sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
-    sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
-    sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
-else
-    cp "./zsh/cmd/code" "/usr/local/bin/code"
-    cp "./zsh/cmd/code" "/usr/local/bin/cursor"
-    chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
-fi
+# echo "Installing code and cursor commands..."
+# if [ "$OS" = "darwin" ]; then
+#     sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
+#     sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+#     sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
+# else
+#     cp "./zsh/cmd/code" "/usr/local/bin/code"
+#     cp "./zsh/cmd/code" "/usr/local/bin/cursor"
+#     chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
+# fi
 
 # Copy docker config for non-macOS systems
 if [ "$OS" != "darwin" ]; then
     mkdir -p "$HOME/.docker"
-    cp "$HOME/dotfiles/docker/config.json" "$HOME/.docker/"
-    echo "Copied .docker/config.json"
+    ln -s "$(pwd)/docker/config.json" "$HOME/.docker/config.json"
+    echo "Installed/symlinked ~/.docker/config.json"
 fi
 
 echo "Dotfiles installation completed successfully!"

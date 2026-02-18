@@ -11,16 +11,6 @@ fi
 typeset -U path PATH
 
 # ============================================================================
-# Workspace PATH (devcontainer) - optimized to avoid redundant sourcing
-# ============================================================================
-if [[ -d "/workspace/.devcontainer-data/.local/share/../bin" ]]; then
-  case ":${PATH}:" in
-    *:"/workspace/.devcontainer-data/.local/share/../bin":*) ;;
-    *) path=("/workspace/.devcontainer-data/.local/share/../bin" $path) ;;
-  esac
-fi
-
-# ============================================================================
 # Homebrew configuration (macOS only) - optimized
 # ============================================================================
 if [[ "$OSTYPE" == darwin* && -z "$BREW_PREFIX" ]]; then
@@ -126,7 +116,7 @@ alias pip="pip3"
 alias pull="git pull"
 alias push="git push"
 alias python="python3"
-alias ssologin="unsetprofile && aws sso login --profile default"
+alias ssologin="unsetprofile && aws sso login"
 alias tti="tofu init"
 alias ttplf="tofu plan -lock=false"
 alias ttlockgen="tofu providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
@@ -165,7 +155,7 @@ function check_logged_in() {
 
 function clean_local_branches() {
   git remote prune origin
-  git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -d
+  git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -D
 }
 
 function claude() {
@@ -180,16 +170,20 @@ function claude() {
 # ============================================================================
 # Run AWS check in background to avoid blocking shell startup
 # Only runs once per session and only in interactive shells
-if [[ -o interactive ]] && command -v aws &> /dev/null && [[ -z "$AWS_CHECK_DONE" ]]; then
-  export AWS_CHECK_DONE=1
-  # Run in background to avoid blocking startup
-  (aws sts get-caller-identity --profile default > /dev/null 2>&1 || {
-    # Only show message if not logged in (avoid noise if command fails for other reasons)
-    if ! aws sts get-caller-identity --profile default > /dev/null 2>&1; then
-      echo "AWS SSO: Not logged in (run 'ssologin' to authenticate)" >&2
-    fi
-  }) &!
-fi
+#
+# Commented out for remote EC2 developent which uses an instance
+# profile for authenticating and accessing AWS
+#
+#if [[ -o interactive ]] && command -v aws &> /dev/null && [[ -z "$AWS_CHECK_DONE" ]]; then
+#  export AWS_CHECK_DONE=1
+#  # Run in background to avoid blocking startup
+#  (aws sts get-caller-identity --profile default > /dev/null 2>&1 || {
+#    # Only show message if not logged in (avoid noise if command fails for other reasons)
+#    if ! aws sts get-caller-identity --profile default > /dev/null 2>&1; then
+#      echo "AWS SSO: Not logged in (run 'ssologin' to authenticate)" >&2
+#    fi
+#  }) &!
+#fi
 
 # ============================================================================
 # GitHub Token - Cached to avoid repeated calls
@@ -205,10 +199,3 @@ if [[ -o interactive ]] && command -v gh &> /dev/null && [[ -z "$GH_TOKEN" ]]; t
     [[ -n "$GH_TOKEN" ]] && echo "$GH_TOKEN" > "$gh_token_cache" 2>/dev/null
   fi
 fi
-
-# ============================================================================
-# Cursor Agent shell integration (commented out as in original)
-# ============================================================================
-#if [[ -o interactive ]] && [[ -x "$HOME/.local/bin/cursor-agent" ]]; then
-#  eval "$(~/.local/bin/cursor-agent shell-integration zsh)"
-#fi
