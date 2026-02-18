@@ -7,13 +7,16 @@
 # Exit on any error
 set -euo pipefail
 
-log() { echo "[$(date -Is)] $*"; }
+log() { echo "[$(date -Iseconds)] $*"; }
 
 # Enforce running from the dotfiles repo dir only
-if [ "$(pwd)" != "dotfiles" ]; then
+if [ "$(basename "$(pwd)")" != "dotfiles" ]; then
   log "Please run from the root of the dotfiles repository"
   exit 1
 fi
+
+# Record repository root so later `cd` calls don't break symlink targets
+REPO_DIR="$(pwd)"
 
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -23,7 +26,24 @@ if [ -f /etc/alpine-release ]; then
     OS="alpine"
 fi
 
-echo "Detected OS: $OS"
+log "Detected OS: $OS"
+
+# Determine machine architecture and related download vars
+detect_arch() {
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
+        AWS_ARCH="x86_64"
+        target="64bit"
+        ecr_arch="amd64"
+    elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+        AWS_ARCH="aarch64"
+        target="arm64"
+        ecr_arch="arm64"
+    else
+        log "Unsupported architecture: ${ARCH}"
+        exit 1
+    fi
+}
 
 # ------------------------------------------------------------
 # uv (Astral)
@@ -32,18 +52,18 @@ log "Installing uv..."
 curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install Antidote
-echo "Installing Antidote..."
+log "Installing Antidote..."
 if [ ! -d "${HOME}/.antidote" ]; then
   git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
-  echo "Antidote installed successfully"
+  log "Antidote installed successfully"
 else
-    echo "Antidote already installed, updating..."
+    log "Antidote already installed, updating..."
     cd "${HOME}/.antidote" && git pull --quiet && cd - > /dev/null
 fi
 
 # Install zsh
 if ! command -v zsh &> /dev/null; then
-    echo "Installing zsh..."
+    log "Installing zsh..."
     if [ "$OS" = "darwin" ]; then
         brew install zsh
     elif [ "$OS" = "alpine" ]; then
@@ -53,12 +73,12 @@ if ! command -v zsh &> /dev/null; then
         apt install -yqq zsh
     fi
 else
-    echo "zsh already installed"
+    log "zsh already installed"
 fi
 
 # Ensure less is installed for the git pager
 if ! command -v less &> /dev/null; then
-    echo "Installing less..."
+    log "Installing less..."
     if [ "$OS" = "darwin" ]; then
         brew install less
     elif [ "$OS" = "alpine" ]; then
@@ -68,7 +88,7 @@ if ! command -v less &> /dev/null; then
         apt install -yqq less
     fi
 else
-    echo "less already installed"
+    log "less already installed"
 fi
 
 # ------------------------------------------------------------
@@ -79,11 +99,21 @@ log "Installing AWS CLI v2..."
 TMP_DIR="$(mktemp -d)"
 cd "$TMP_DIR"
 
-curl -fsSLo awscliv2.zip \
-  "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
+if [ "$OS" = "darwin" ]; then
+    detect_arch
+    curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
+    sudo installer -pkg AWSCLIV2.pkg -target /
+elif [ "$OS" = "alpine" ]; then
+    apk add --no-cache aws-cli
+else
+    detect_arch
 
-unzip -q awscliv2.zip
-./aws/install --update
+    curl -fsSLo awscliv2.zip \
+      "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
+
+    unzip -q awscliv2.zip
+    ./aws/install --update
+fi
 
 cd /
 rm -rf "$TMP_DIR"
@@ -91,22 +121,14 @@ rm -rf "$TMP_DIR"
 aws --version
 
 # Install the AWS Session Manager Plugin
-if ! command -v session-manager-plugin &> /dev/null; then
-    echo "Installing AWS Session Manager Plugin..."
+if ! command -v session-manager-plugin >/dev/null 2>&1; then
+    log "Installing AWS Session Manager Plugin..."
     if [ "$OS" = "darwin" ]; then
-        brew install session-manager-plugin
+        brew install --force session-manager-plugin || true
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache aws-session-manager-plugin
     else
-        ARCH=$(uname -m)
-        if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
-            target="64bit"
-        elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
-            target="arm64"
-        else
-            echo "Unsupported architecture: ${ARCH}"
-            exit 1
-        fi
+        detect_arch
 
         SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
         wget -qq "$SESSION_MANAGER_URL" -P "/tmp"
@@ -114,23 +136,15 @@ if ! command -v session-manager-plugin &> /dev/null; then
         rm /tmp/session-manager-plugin.deb
     fi
 else
-    echo "AWS Session Manager Plugin is already installed"
+    log "AWS Session Manager Plugin is already installed"
 fi
 
 # Install Docker ECR Credential Helper
 if ! command -v docker-credential-ecr-login &> /dev/null; then
-    echo "Installing Docker ECR Credential Helper..."
+    log "Installing Docker ECR Credential Helper..."
     
     # Detect architecture
-    ARCH=$(uname -m)
-    if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
-        ecr_arch="amd64"
-    elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
-        ecr_arch="arm64"
-    else
-        echo "Unsupported architecture: ${ARCH}"
-        exit 1
-    fi
+    detect_arch
     
     # Map OS to S3 format
     if [ "$OS" = "darwin" ]; then
@@ -138,7 +152,7 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
     elif [ "$OS" = "alpine" ] || [ "$OS" = "linux" ]; then
         ecr_os="linux"
     else
-        echo "Unsupported OS: ${OS}"
+        log "Unsupported OS: ${OS}"
         exit 1
     fi
     
@@ -149,7 +163,7 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
     ECR_URL="https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${ECR_CRED_HELPER_VERSION}/${ecr_os}-${ecr_arch}/docker-credential-ecr-login"
     TMP_BINARY="/tmp/docker-credential-ecr-login"
     
-    echo "Downloading Docker ECR Credential Helper for ${ecr_os}-${ecr_arch}..."
+    log "Downloading Docker ECR Credential Helper for ${ecr_os}-${ecr_arch}..."
     curl -fSL "$ECR_URL" -o "$TMP_BINARY"
     
     # Make executable and install
@@ -160,36 +174,41 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
         mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
     fi
     
-    echo "Docker ECR Credential Helper installed successfully"
+    log "Docker ECR Credential Helper installed successfully"
 else
-    echo "Docker ECR Credential Helper is already installed"
+    log "Docker ECR Credential Helper is already installed"
 fi
 
 # Copy dotfiles to home directory
-echo "Copying dotfiles to home directory..."
+log "Copying dotfiles to home directory..."
 
 # Create backup of existing files if they exist
 if [ -f "$HOME/.zshrc" ]; then
     mv "$HOME/.zshrc" "$HOME/.zshrc.backup"
-    echo "Backed up existing .zshrc"
+    log "Backed up existing .zshrc"
 fi
 
 if [ -f "$HOME/.zsh_plugins.txt" ]; then
     mv "$HOME/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt.backup" 
-    echo "Backed up existing .zsh_plugins.txt"
+    log "Backed up existing .zsh_plugins.txt"
 fi
 
 if [ -f "$HOME/.p10k.zsh" ]; then
     mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh.backup"
-    echo "Backed up existing .p10k.zsh"
+    log "Backed up existing .p10k.zsh"
+fi
+
+if [ -f "$HOME/.tmux.conf" ]; then
+    mv "$HOME/.tmux.conf" "$HOME/.tmux.conf.backup"
+    log "Backed up existing .tmux.conf"
 fi
 
 # Copy new files
-echo "Installing/symlinking zsh configuration files..."
-ln -s "$(pwd)/zsh/.zshrc" "$HOME/.zshrc"
-ln -s "$(pwd)/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
-ln -s "$(pwd)/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
-ln -s "$(pwd)/tmux/.tmux.conf" "$HOME/.tmux.conf"
+log "Installing/symlinking zsh configuration files..."
+ln -sfn "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
+ln -sfn "$REPO_DIR/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
+ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # Copy code/cursor commands
 # echo "Installing code and cursor commands..."
@@ -206,9 +225,14 @@ ln -s "$(pwd)/tmux/.tmux.conf" "$HOME/.tmux.conf"
 # Copy docker config for non-macOS systems
 if [ "$OS" != "darwin" ]; then
     mkdir -p "$HOME/.docker"
-    ln -s "$(pwd)/docker/config.json" "$HOME/.docker/config.json"
-    echo "Installed/symlinked ~/.docker/config.json"
+    if [ -f "$HOME/.docker/config.json" ]; then
+        mv "$HOME/.docker/config.json" "$HOME/.docker/config.json.backup"
+        log "Backed up existing docker config json"
+    fi
+
+    ln -sfn "$REPO_DIR/docker/config.json" "$HOME/.docker/config.json"
+    log "Installed/symlinked ~/.docker/config.json"
 fi
 
-echo "Dotfiles installation completed successfully!"
-echo "Please restart your shell or run 'source ~/.zshrc' to apply changes."
+log "Dotfiles installation completed successfully!"
+log "Please restart your shell or run 'exec zsh' to apply changes."
