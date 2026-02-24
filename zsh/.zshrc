@@ -67,29 +67,22 @@ fi
 if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     source "$HOME/.antidote/antidote.zsh"
 
-    source <(antidote init)
-
     # Set ZSH to antidote's oh-my-zsh installation
     export ANTIDOTE_HOME="${ANTIDOTE_HOME:-$(antidote home)}"
     export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh"
 
-    # Load plugins from .zsh_plugins.txt (suppress verbose output)
-    if [[ -f ~/.zsh_plugins.txt ]]; then
-        # Cache plugin bundle output to avoid displaying it
-        local bundle_cache="${XDG_CACHE_HOME:-$HOME/.cache}/antidote-bundle.zsh"
-        if [[ ! -f "$bundle_cache" ]] || [[ "$bundle_cache" -ot ~/.zsh_plugins.txt ]]; then
-            antidote bundle < ~/.zsh_plugins.txt > "$bundle_cache" 2>/dev/null
-        fi
-        source "$bundle_cache" 2>/dev/null
-    fi
+    # ZSH_CACHE_DIR is normally set by oh-my-zsh.sh, but we load path:lib
+    # directly so it's never defined. Plugins like docker and uv need it.
+    export ZSH_CACHE_DIR="${ZSH_CACHE_DIR:-$ZSH/cache}"
+    [[ -d "$ZSH_CACHE_DIR/completions" ]] || mkdir -p "$ZSH_CACHE_DIR/completions"
+
+    # antidote load reads ~/.zsh_plugins.txt and generates a static
+    # cache at ~/.zsh_plugins.zsh, regenerating when the txt changes
+    antidote load
 
     # Conditionally load brew plugin only on macOS
     if [[ "$OSTYPE" == darwin* ]]; then
-        local brew_cache="${XDG_CACHE_HOME:-$HOME/.cache}/antidote-bundle-brew.zsh"
-        if [[ ! -f "$brew_cache" ]]; then
-            antidote bundle robbyrussell/oh-my-zsh path:plugins/brew > "$brew_cache" 2>/dev/null
-        fi
-        source "$brew_cache" 2>/dev/null
+        antidote bundle robbyrussell/oh-my-zsh path:plugins/brew | source /dev/stdin
     fi
 fi
 
