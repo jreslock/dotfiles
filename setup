@@ -211,7 +211,7 @@ ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # Install gitconfig (skip in devcontainers — they auto-load host gitconfig)
-if [ -z "$REMOTE_CONTAINERS" ] && [ -z "$CODESPACES" ] && [ ! -f "/.dockerenv" ]; then
+if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dockerenv" ]; then
     if [ -f "$HOME/.gitconfig" ]; then
         mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
         log "Backed up existing .gitconfig"
