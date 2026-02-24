@@ -48,8 +48,12 @@ detect_arch() {
 # ------------------------------------------------------------
 # uv (Astral)
 # ------------------------------------------------------------
-log "Installing uv..."
-curl -LsSf https://astral.sh/uv/install.sh | sh
+if ! command -v uv &> /dev/null; then
+    log "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+else
+    log "uv already installed"
+fi
 
 # Install Antidote
 log "Installing Antidote..."
@@ -94,31 +98,35 @@ fi
 # ------------------------------------------------------------
 # AWS CLI v2
 # ------------------------------------------------------------
-log "Installing AWS CLI v2..."
+if ! command -v aws &> /dev/null; then
+    log "Installing AWS CLI v2..."
 
-TMP_DIR="$(mktemp -d)"
-cd "$TMP_DIR"
+    TMP_DIR="$(mktemp -d)"
+    cd "$TMP_DIR"
 
-if [ "$OS" = "darwin" ]; then
-    detect_arch
-    curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
-    sudo installer -pkg AWSCLIV2.pkg -target /
-elif [ "$OS" = "alpine" ]; then
-    apk add --no-cache aws-cli
+    if [ "$OS" = "darwin" ]; then
+        detect_arch
+        curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
+        sudo installer -pkg AWSCLIV2.pkg -target /
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache aws-cli
+    else
+        detect_arch
+
+        curl -fsSLo awscliv2.zip \
+          "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
+
+        unzip -q awscliv2.zip
+        ./aws/install --update
+    fi
+
+    cd /
+    rm -rf "$TMP_DIR"
+
+    aws --version
 else
-    detect_arch
-
-    curl -fsSLo awscliv2.zip \
-      "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
-
-    unzip -q awscliv2.zip
-    ./aws/install --update
+    log "AWS CLI v2 already installed"
 fi
-
-cd /
-rm -rf "$TMP_DIR"
-
-aws --version
 
 # Install the AWS Session Manager Plugin
 if ! command -v session-manager-plugin >/dev/null 2>&1; then
@@ -225,11 +233,9 @@ fi
 # Install code command
 log "Installing code command..."
 if [ "$OS" = "darwin" ]; then
-    sudo cp "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
-    sudo chmod +x "/usr/local/bin/code"
+    sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
 else
-    cp "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
-    chmod +x "/usr/local/bin/code"
+    ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
 fi
 
 # Copy docker config for non-macOS systems
