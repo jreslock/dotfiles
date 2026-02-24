@@ -49,11 +49,11 @@ if [[ -z "$_comp_setup" ]]; then
     # -u: update cache if older than 24 hours
     # -d: specify dumpfile location
     local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
-    if [[ -n "$zcompdump"(#qN.mh+24) ]]; then
-        # Cache is fresh, skip security check for speed
+    if [[ -n "$zcompdump"(#qN.mh-24) ]]; then
+        # Cache is fresh (less than 24 hours old), skip security check for speed
         compinit -C -d "$zcompdump"
     else
-        # Cache is stale or missing, update it
+        # Cache is stale or missing, rebuild it
         compinit -u -d "$zcompdump"
     fi
     
@@ -67,16 +67,10 @@ fi
 if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     source "$HOME/.antidote/antidote.zsh"
 
-    # Initialize antidote (cache the init output if possible)
-    ANTIDOTE_INIT_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/antidote-init.zsh"
-    if [[ -f "$ANTIDOTE_INIT_CACHE" ]] && [[ "$ANTIDOTE_INIT_CACHE" -nt "$HOME/.antidote/antidote.zsh" ]]; then
-        source "$ANTIDOTE_INIT_CACHE"
-    else
-        source <(antidote init) | tee "$ANTIDOTE_INIT_CACHE" >/dev/null 2>&1 || source <(antidote init)
-    fi
+    source <(antidote init)
 
     # Set ZSH to antidote's oh-my-zsh installation
-    ANTIDOTE_HOME="$(antidote home)"
+    export ANTIDOTE_HOME="${ANTIDOTE_HOME:-$(antidote home)}"
     export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh"
 
     # Load plugins from .zsh_plugins.txt (suppress verbose output)
@@ -110,7 +104,7 @@ fi
 alias c="clear"
 alias clb="clean_local_branches"
 alias es="exec zsh"
-alias gitauth="gh auth login setup-git"
+alias gitauth="gh auth login && gh auth setup-git"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias pip="pip3"
 alias pull="git pull"
@@ -155,7 +149,7 @@ function check_logged_in() {
 
 function clean_local_branches() {
   git remote prune origin
-  git branch -a | egrep -v "(^\*|master|main|origin)" | xargs -n 1 git branch -D
+  git branch -a | grep -Ev "(^\*|master|main|origin)" | xargs -n 1 git branch -D
 }
 
 function claude() {
@@ -190,12 +184,5 @@ function claude() {
 # ============================================================================
 # Only set if gh is available and token not already set
 if [[ -o interactive ]] && command -v gh &> /dev/null && [[ -z "$GH_TOKEN" ]]; then
-  # Cache token in a file to avoid calling gh on every shell start
-  local gh_token_cache="${XDG_CACHE_HOME:-$HOME/.cache}/gh-token"
-  if [[ -f "$gh_token_cache" ]] && [[ "$gh_token_cache" -nt "$(which gh)" ]]; then
-    export GH_TOKEN="$(cat "$gh_token_cache" 2>/dev/null)"
-  else
-    export GH_TOKEN=$(gh auth token 2>/dev/null || echo "")
-    [[ -n "$GH_TOKEN" ]] && echo "$GH_TOKEN" > "$gh_token_cache" 2>/dev/null
-  fi
+  export GH_TOKEN=$(gh auth token 2>/dev/null || echo "")
 fi

@@ -210,17 +210,27 @@ ln -sfn "$REPO_DIR/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
 ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
-# Copy code/cursor commands
-# echo "Installing code and cursor commands..."
-# if [ "$OS" = "darwin" ]; then
-#     sudo cp "./zsh/cmd/code" "/usr/local/bin/code"
-#     sudo cp "./zsh/cmd/code" "/usr/local/bin/cursor"
-#     sudo chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
-# else
-#     cp "./zsh/cmd/code" "/usr/local/bin/code"
-#     cp "./zsh/cmd/code" "/usr/local/bin/cursor"
-#     chmod +x "/usr/local/bin/code" "/usr/local/bin/cursor"
-# fi
+# Install gitconfig (skip in devcontainers — they auto-load host gitconfig)
+if [ -z "$REMOTE_CONTAINERS" ] && [ -z "$CODESPACES" ] && [ ! -f "/.dockerenv" ]; then
+    if [ -f "$HOME/.gitconfig" ]; then
+        mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
+        log "Backed up existing .gitconfig"
+    fi
+    ln -sfn "$REPO_DIR/git/gitconfig_template" "$HOME/.gitconfig"
+    log "Installed/symlinked ~/.gitconfig"
+else
+    log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"
+fi
+
+# Install code command
+log "Installing code command..."
+if [ "$OS" = "darwin" ]; then
+    sudo cp "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
+    sudo chmod +x "/usr/local/bin/code"
+else
+    cp "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
+    chmod +x "/usr/local/bin/code"
+fi
 
 # Copy docker config for non-macOS systems
 if [ "$OS" != "darwin" ]; then

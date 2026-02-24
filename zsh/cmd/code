@@ -5,7 +5,7 @@
 
 # when run in remote terminal, use the remote cli
 if [ -n "$VSCODE_IPC_HOOK_CLI" ]; then
-	REMOTE_CLI="$(which -a 'cursor' | grep /remote-cli/)"
+	REMOTE_CLI="$(which -a 'code' | grep /remote-cli/)"
 	if [ -n "$REMOTE_CLI" ]; then
 		"$REMOTE_CLI" "$@"
 		exit $?
@@ -29,7 +29,7 @@ if [ -z "$APP_PATH" ]; then
 	exit 1
 fi
 CONTENTS="$APP_PATH/Contents"
-ELECTRON="$CONTENTS/MacOS/Cursor"
+ELECTRON="$CONTENTS/MacOS/Electron"
 CLI="$CONTENTS/Resources/app/out/cli.js"
 export VSCODE_NODE_OPTIONS=$NODE_OPTIONS
 export VSCODE_NODE_REPL_EXTERNAL_MODULE=$NODE_REPL_EXTERNAL_MODULE

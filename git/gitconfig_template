@@ -11,10 +11,16 @@
 
 [push]
     default  = current
+    autoSetupRemote = true
+
+[init]
+    defaultBranch = main
+
+[rerere]
+    enabled  = true
 
 [pull]
     rebase   = true
-    ff		 = only
 
 [alias]
     ignore	 = "!gi() { curl -L -s https://www.gitignore.io/api/$@ ;}; gi"
@@ -31,6 +37,10 @@
 
 [merge]
     tool	 = code
+    conflictStyle = zdiff3
+
+[commit]
+    verbose  = true
 
 [mergetool "code"]
 	cmd      = code --wait $MERGED
