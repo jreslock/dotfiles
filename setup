@@ -250,7 +250,7 @@ log "Installing code command..."
 if [ "$OS" = "darwin" ]; then
     sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
 else
-    ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
+    sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
 fi
 
 # Copy docker config for non-macOS systems
