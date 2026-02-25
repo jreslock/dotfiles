@@ -265,5 +265,11 @@ if [ "$OS" != "darwin" ]; then
     log "Installed/symlinked ~/.docker/config.json"
 fi
 
+# Pre-download antidote plugins so the first shell launch doesn't error
+# with missing source files while repos are still cloning.
+log "Pre-downloading antidote plugins..."
+rm -f "$HOME/.zsh_plugins.zsh"
+zsh -c 'source "$HOME/.antidote/antidote.zsh" && antidote load'
+
 log "Dotfiles installation completed successfully!"
 log "Please restart your shell or run 'exec zsh' to apply changes."
