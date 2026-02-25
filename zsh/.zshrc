@@ -69,7 +69,7 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
 
     # Set ZSH to antidote's oh-my-zsh installation
     export ANTIDOTE_HOME="${ANTIDOTE_HOME:-$(antidote home)}"
-    export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh"
+    export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-ohmyzsh-SLASH-ohmyzsh"
 
     # ZSH_CACHE_DIR is normally set by oh-my-zsh.sh, but we load path:lib
     # directly so it's never defined. Plugins like docker and uv need it.
@@ -82,7 +82,7 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
 
     # Conditionally load brew plugin only on macOS
     if [[ "$OSTYPE" == darwin* ]]; then
-        antidote bundle robbyrussell/oh-my-zsh path:plugins/brew | source /dev/stdin
+        antidote bundle ohmyzsh/ohmyzsh path:plugins/brew | source /dev/stdin
     fi
 fi
 
