@@ -1,10 +1,10 @@
 romkatv/powerlevel10k
-robbyrussell/oh-my-zsh path:lib
+robbyrussell/oh-my-zsh path:lib kind:path
 robbyrussell/oh-my-zsh path:plugins/aws
 robbyrussell/oh-my-zsh path:plugins/docker
 robbyrussell/oh-my-zsh path:plugins/git
 robbyrussell/oh-my-zsh path:plugins/opentofu
 robbyrussell/oh-my-zsh path:plugins/uv
-zsh-users/zsh-completions
+zsh-users/zsh-completions kind:fpath
 zsh-users/zsh-autosuggestions
 zsh-users/zsh-syntax-highlighting
