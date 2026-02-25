@@ -2,9 +2,8 @@
 	editor   = code --wait
 	pager    = less -F
 
-[user]
-    email    = jreslock@users.noreply.github.com
-    name     = Jason Reslock
+[include]
+    path     = ~/.gitconfig.local
 
 [color]
     ui       = auto
@@ -44,3 +43,6 @@
 
 [mergetool "code"]
 	cmd      = code --wait $MERGED
+[user]
+	name = Jason Reslock
+	email = jreslock@users.noreply.github.com

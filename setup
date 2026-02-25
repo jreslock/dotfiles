@@ -226,6 +226,21 @@ if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dock
     fi
     ln -sfn "$REPO_DIR/git/gitconfig_template" "$HOME/.gitconfig"
     log "Installed/symlinked ~/.gitconfig"
+
+    # Set up user-specific git config in ~/.gitconfig.local
+    if [ ! -f "$HOME/.gitconfig.local" ]; then
+        log "Setting up git user identity..."
+        printf "Git user name: " && read -r GIT_USER_NAME
+        printf "Git email: " && read -r GIT_USER_EMAIL
+        cat > "$HOME/.gitconfig.local" <<EOF
+[user]
+    name     = $GIT_USER_NAME
+    email    = $GIT_USER_EMAIL
+EOF
+        log "Created ~/.gitconfig.local with user identity"
+    else
+        log "~/.gitconfig.local already exists, skipping user identity setup"
+    fi
 else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"
 fi
