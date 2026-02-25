@@ -269,7 +269,7 @@ fi
 # with missing source files while repos are still cloning.
 log "Pre-downloading antidote plugins..."
 rm -f "$HOME/.zsh_plugins.zsh"
-zsh -c 'source "$HOME/.antidote/antidote.zsh" && antidote load'
+zsh -c 'source "$HOME/.antidote/antidote.zsh" && antidote load' 2>/dev/null
 
 log "Dotfiles installation completed successfully!"
 log "Please restart your shell or run 'exec zsh' to apply changes."
