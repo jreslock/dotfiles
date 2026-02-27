@@ -229,9 +229,9 @@ if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dock
 
     # Set up user-specific git config in ~/.gitconfig.local
     if [ ! -f "$HOME/.gitconfig.local" ]; then
-        log "Setting up git user identity..."
-        printf "Git user name: " && read -r GIT_USER_NAME
-        printf "Git email: " && read -r GIT_USER_EMAIL
+        GIT_USER_NAME="${USER:-$(whoami)}"
+        GIT_USER_EMAIL="${GIT_USER_NAME}@users.noreply.github.com"
+        log "Setting up git user identity as '${GIT_USER_NAME}' <${GIT_USER_EMAIL}>..."
         cat > "$HOME/.gitconfig.local" <<EOF
 [user]
     name     = $GIT_USER_NAME
