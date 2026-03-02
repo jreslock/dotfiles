@@ -37,28 +37,14 @@ fi
 path=("$HOME/.docker/bin" "$HOME/.local/bin" $path)
 
 # ============================================================================
-# Zsh Completion System - Optimized with caching
+# Zsh Completion System - Initial compinit so compdef is available for plugins
 # ============================================================================
-if [[ -z "$_comp_setup" ]]; then
-    # Only load bashcompinit if actually needed (most modern setups don't need it)
-    # compinit can handle most completions natively
-    autoload -Uz compinit
-    
-    # Check if completion cache is fresh (less than 24 hours old)
-    # -C: skip security check if cache is fresh (major speedup)
-    # -u: update cache if older than 24 hours
-    # -d: specify dumpfile location
-    local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
-    if [[ -n "$zcompdump"(#qN.mh-24) ]]; then
-        # Cache is fresh (less than 24 hours old), skip security check for speed
-        compinit -C -d "$zcompdump"
-    else
-        # Cache is stale or missing, rebuild it
-        compinit -u -d "$zcompdump"
-    fi
-    
-    # Mark as setup to prevent duplicate initialization
-    _comp_setup=1
+autoload -Uz compinit
+local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+if [[ -n "$zcompdump"(#qN.mh-24) ]]; then
+    compinit -C -d "$zcompdump"
+else
+    compinit -u -d "$zcompdump"
 fi
 
 # ============================================================================
@@ -84,6 +70,9 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     if [[ "$OSTYPE" == darwin* ]]; then
         antidote bundle ohmyzsh/ohmyzsh path:plugins/brew | source /dev/stdin
     fi
+
+    # Re-run compinit to pick up fpath entries added by zsh-completions
+    compinit -u -d "$zcompdump"
 fi
 
 # ============================================================================
@@ -98,6 +87,7 @@ alias c="clear"
 alias clb="clean_local_branches"
 alias es="exec zsh"
 alias gitauth="gh auth login && gh auth setup-git"
+alias ll="ls -lh"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias pip="pip3"
 alias pull="git pull"
