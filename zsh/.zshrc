@@ -5,36 +5,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# ============================================================================
-# PATH Management - Skip duplicates to prevent PATH bloat
-# ============================================================================
-typeset -U path PATH
-
-# ============================================================================
-# Homebrew configuration (macOS only) - optimized
-# ============================================================================
-if [[ "$OSTYPE" == darwin* && -z "$BREW_PREFIX" ]]; then
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-        export BREW_PREFIX="/opt/homebrew"
-    elif [[ -x "/usr/local/bin/brew" ]]; then
-        export BREW_PREFIX="/usr/local"
-    fi
-
-    if [[ -n "$BREW_PREFIX" ]]; then
-        # Add core homebrew paths
-        path=("$BREW_PREFIX/bin" "$BREW_PREFIX/sbin" $path)
-        export MANPATH="$BREW_PREFIX/share/man:$MANPATH"
-
-        # Add common opt packages (only if they exist)
-        [[ -d "$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" ]] && path=("$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" $path)
-        [[ -d "$BREW_PREFIX/opt/coreutils/libexec/gnubin" ]] && path=("$BREW_PREFIX/opt/coreutils/libexec/gnubin" $path)
-    fi
-fi
-
-# ============================================================================
-# Essential PATH additions
-# ============================================================================
-path=("$HOME/.docker/bin" "$HOME/.local/bin" "$HOME/.local/share/node/bin" $path)
+# PATH and Homebrew are configured in ~/.zshenv (applies to all zsh contexts)
 
 # ============================================================================
 # Zsh Completion System - Initial compinit so compdef is available for plugins
@@ -65,11 +36,6 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     # antidote load reads ~/.zsh_plugins.txt and generates a static
     # cache at ~/.zsh_plugins.zsh, regenerating when the txt changes
     antidote load
-
-    # Conditionally load brew plugin only on macOS
-    if [[ "$OSTYPE" == darwin* ]]; then
-        antidote bundle ohmyzsh/ohmyzsh path:plugins/brew | source /dev/stdin
-    fi
 
     # Re-run compinit to pick up fpath entries added by zsh-completions
     compinit -u -d "$zcompdump"

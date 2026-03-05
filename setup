@@ -245,11 +245,9 @@ else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"
 fi
 
-# Install code command
-log "Installing code command..."
+# Install code command (macOS only — uses VS Code .app bundle)
 if [ "$OS" = "darwin" ]; then
-    sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
-else
+    log "Installing code command..."
     sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
 fi
 

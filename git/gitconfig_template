@@ -1,9 +1,6 @@
 [core]
-	editor   = code --wait
+	editor   = vim
 	pager    = less -F
-
-[include]
-    path     = ~/.gitconfig.local
 
 [color]
     ui       = auto
@@ -28,21 +25,19 @@
     prune	 = true
 
 [diff]
-	tool     = code
-
-[difftool "vscode"]
-	cmd      = code --wait --diff $LOCAL $REMOTE
-	tool	 = code
+	tool     = vimdiff
 
 [merge]
-    tool	 = code
+    tool	 = vimdiff
     conflictStyle = zdiff3
 
 [commit]
     verbose  = true
 
-[mergetool "code"]
-	cmd      = code --wait $MERGED
 [user]
 	name = Jason Reslock
 	email = jreslock@users.noreply.github.com
+
+# Machine-specific overrides (must be last to take precedence)
+[include]
+    path     = ~/.gitconfig.local
