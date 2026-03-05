@@ -34,7 +34,7 @@ fi
 # ============================================================================
 # Essential PATH additions
 # ============================================================================
-path=("$HOME/.docker/bin" "$HOME/.local/bin" $path)
+path=("$HOME/.docker/bin" "$HOME/.local/bin" "$HOME/.local/share/node/bin" $path)
 
 # ============================================================================
 # Zsh Completion System - Initial compinit so compdef is available for plugins
@@ -169,3 +169,7 @@ function claude() {
 if [[ -o interactive ]] && command -v gh &> /dev/null && [[ -z "$GH_TOKEN" ]]; then
   export GH_TOKEN=$(gh auth token 2>/dev/null || echo "")
 fi
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
+
+zstyle ':completion:*' menu select
