@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # This script sets up the environment in a new development container.
-# It installs Antidote, zsh, less, unzip, the GitHub CLI (gh), AWS CLI v2,
-# AWS Session Manager Plugin, and Git Credential Manager.
+# It installs Antidote, zsh, less, uv, AWS CLI v2,
+# AWS Session Manager Plugin, and Docker ECR Credential Helper.
 
 # Exit on any error
 set -euo pipefail
@@ -56,14 +56,16 @@ else
 fi
 
 # Install Antidote
-log "Installing Antidote..."
 if [ ! -d "${HOME}/.antidote" ]; then
+  log "Installing Antidote..."
   git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
-  log "Antidote installed successfully"
 else
     log "Antidote already installed, updating..."
-    cd "${HOME}/.antidote" && git pull --quiet && cd - > /dev/null
+    (cd "${HOME}/.antidote" && git pull --quiet)
 fi
+
+# Collect apt packages to install (avoids running apt update multiple times)
+apt_packages=()
 
 # Install zsh
 if ! command -v zsh &> /dev/null; then
@@ -73,8 +75,7 @@ if ! command -v zsh &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache zsh
     else
-        sudo apt update -yqq
-        sudo apt install -yqq zsh
+        apt_packages+=(zsh)
     fi
 else
     log "zsh already installed"
@@ -88,11 +89,30 @@ if ! command -v less &> /dev/null; then
     elif [ "$OS" = "alpine" ]; then
         apk add --no-cache less
     else
-        sudo apt update -yqq
-        sudo apt install -yqq less
+        apt_packages+=(less)
     fi
 else
     log "less already installed"
+fi
+
+# Ensure unzip is installed (needed for AWS CLI install)
+if ! command -v unzip &> /dev/null; then
+    log "Installing unzip..."
+    if [ "$OS" = "darwin" ]; then
+        brew install unzip
+    elif [ "$OS" = "alpine" ]; then
+        apk add --no-cache unzip
+    else
+        apt_packages+=(unzip)
+    fi
+else
+    log "unzip already installed"
+fi
+
+# Install collected apt packages in one shot
+if [ ${#apt_packages[@]} -gt 0 ]; then
+    sudo apt update -yqq
+    sudo apt install -yqq "${apt_packages[@]}"
 fi
 
 # ------------------------------------------------------------
@@ -101,27 +121,26 @@ fi
 if ! command -v aws &> /dev/null; then
     log "Installing AWS CLI v2..."
 
-    TMP_DIR="$(mktemp -d)"
-    cd "$TMP_DIR"
-
-    if [ "$OS" = "darwin" ]; then
-        detect_arch
-        curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
-        sudo installer -pkg AWSCLIV2.pkg -target /
-    elif [ "$OS" = "alpine" ]; then
+    if [ "$OS" = "alpine" ]; then
         apk add --no-cache aws-cli
     else
-        detect_arch
-
-        curl -fsSLo awscliv2.zip \
-          "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
-
-        unzip -q awscliv2.zip
-        ./aws/install --update
+        TMP_DIR="$(mktemp -d)"
+        (
+            cd "$TMP_DIR"
+            if [ "$OS" = "darwin" ]; then
+                detect_arch
+                curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
+                sudo installer -pkg AWSCLIV2.pkg -target /
+            else
+                detect_arch
+                curl -fsSLo awscliv2.zip \
+                  "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
+                unzip -q awscliv2.zip
+                ./aws/install --update
+            fi
+        )
+        rm -rf "$TMP_DIR"
     fi
-
-    cd /
-    rm -rf "$TMP_DIR"
 
     aws --version
 else
@@ -139,7 +158,7 @@ if ! command -v session-manager-plugin >/dev/null 2>&1; then
         detect_arch
 
         SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
-        wget -qq "$SESSION_MANAGER_URL" -P "/tmp"
+        curl -fsSLo /tmp/session-manager-plugin.deb "$SESSION_MANAGER_URL"
         sudo dpkg -i /tmp/session-manager-plugin.deb
         rm /tmp/session-manager-plugin.deb
     fi
@@ -176,11 +195,7 @@ if ! command -v docker-credential-ecr-login &> /dev/null; then
     
     # Make executable and install
     chmod +x "$TMP_BINARY"
-    if [ "$OS" = "darwin" ]; then
-        sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
-    else
-        sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
-    fi
+    sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
     
     log "Docker ECR Credential Helper installed successfully"
 else
@@ -190,26 +205,13 @@ fi
 # Copy dotfiles to home directory
 log "Copying dotfiles to home directory..."
 
-# Create backup of existing files if they exist
-if [ -f "$HOME/.zshrc" ]; then
-    mv "$HOME/.zshrc" "$HOME/.zshrc.backup"
-    log "Backed up existing .zshrc"
-fi
-
-if [ -f "$HOME/.zsh_plugins.txt" ]; then
-    mv "$HOME/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt.backup" 
-    log "Backed up existing .zsh_plugins.txt"
-fi
-
-if [ -f "$HOME/.p10k.zsh" ]; then
-    mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh.backup"
-    log "Backed up existing .p10k.zsh"
-fi
-
-if [ -f "$HOME/.tmux.conf" ]; then
-    mv "$HOME/.tmux.conf" "$HOME/.tmux.conf.backup"
-    log "Backed up existing .tmux.conf"
-fi
+# Back up existing real files (skip symlinks from previous runs)
+for f in .zshrc .zsh_plugins.txt .p10k.zsh .tmux.conf; do
+    if [ -f "$HOME/$f" ] && [ ! -L "$HOME/$f" ]; then
+        mv "$HOME/$f" "$HOME/${f}.backup"
+        log "Backed up existing $f"
+    fi
+done
 
 # Copy new files
 log "Installing/symlinking zsh configuration files..."
@@ -220,7 +222,7 @@ ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # Install gitconfig (skip in devcontainers — they auto-load host gitconfig)
 if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dockerenv" ]; then
-    if [ -f "$HOME/.gitconfig" ]; then
+    if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
         mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
         log "Backed up existing .gitconfig"
     fi
@@ -245,16 +247,10 @@ else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"
 fi
 
-# Install code command (macOS only — uses VS Code .app bundle)
-if [ "$OS" = "darwin" ]; then
-    log "Installing code command..."
-    sudo ln -sfn "$REPO_DIR/zsh/cmd/code" "/usr/local/bin/code"
-fi
-
 # Copy docker config for non-macOS systems
 if [ "$OS" != "darwin" ]; then
     mkdir -p "$HOME/.docker"
-    if [ -f "$HOME/.docker/config.json" ]; then
+    if [ -f "$HOME/.docker/config.json" ] && [ ! -L "$HOME/.docker/config.json" ]; then
         mv "$HOME/.docker/config.json" "$HOME/.docker/config.json.backup"
         log "Backed up existing docker config json"
     fi

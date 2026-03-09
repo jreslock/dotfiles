@@ -131,9 +131,11 @@ function claude() {
 # ============================================================================
 # GitHub Token - Cached to avoid repeated calls
 # ============================================================================
-# Only set if gh is available and token not already set
+# Only set if gh is available, not already set, and auth token is non-empty
 if [[ -o interactive ]] && command -v gh &> /dev/null && [[ -z "$GH_TOKEN" ]]; then
-  export GH_TOKEN=$(gh auth token 2>/dev/null || echo "")
+  _gh_token=$(gh auth token 2>/dev/null)
+  [[ -n "$_gh_token" ]] && export GH_TOKEN="$_gh_token"
+  unset _gh_token
 fi
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
