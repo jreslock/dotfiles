@@ -101,13 +101,6 @@ function clean_local_branches() {
   git branch -a | grep -Ev "(^\*|master|main|origin)" | xargs -n 1 git branch -D
 }
 
-function claude() {
-  if command -v bedrock-token &> /dev/null; then
-    eval "$(bedrock-token)"
-  fi
-  command claude "$@"
-}
-
 # ============================================================================
 # AWS SSO Check - Deferred to background for faster startup
 # ============================================================================
