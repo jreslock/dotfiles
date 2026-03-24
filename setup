@@ -118,7 +118,7 @@ fi
 # ------------------------------------------------------------
 # AWS CLI v2
 # ------------------------------------------------------------
-if command -v aws &> /dev/null || [ -x /usr/local/bin/aws ]; then
+if command -v aws &> /dev/null || [ -x /usr/local/bin/aws ] || [ -x "$HOME/.local/bin/aws" ]; then
     log "AWS CLI v2 already installed"
 else
     log "Installing AWS CLI v2..."
@@ -138,7 +138,7 @@ else
                 curl -fsSLo awscliv2.zip \
                   "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
                 unzip -q awscliv2.zip
-                ./aws/install --update
+                ./aws/install --install-dir "$HOME/.local/aws-cli" --bin-dir "$HOME/.local/bin" --update
             fi
         )
         rm -rf "$TMP_DIR"
