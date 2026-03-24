@@ -118,7 +118,9 @@ fi
 # ------------------------------------------------------------
 # AWS CLI v2
 # ------------------------------------------------------------
-if ! command -v aws &> /dev/null; then
+if command -v aws &> /dev/null || [ -x /usr/local/bin/aws ]; then
+    log "AWS CLI v2 already installed"
+else
     log "Installing AWS CLI v2..."
 
     if [ "$OS" = "alpine" ]; then
@@ -143,8 +145,6 @@ if ! command -v aws &> /dev/null; then
     fi
 
     aws --version
-else
-    log "AWS CLI v2 already installed"
 fi
 
 # Install the AWS Session Manager Plugin
