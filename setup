@@ -1,34 +1,26 @@
 #!/usr/bin/env bash
 
-# This script sets up the environment in a new development container.
-# It installs Antidote, zsh, less, uv, AWS CLI v2,
-# AWS Session Manager Plugin, and Docker ECR Credential Helper.
+# Sets up the shell environment on a Linux (Ubuntu/Debian) host.
+#
+# Symlinking the dotfiles is the only step that must succeed, so it runs first
+# and unconditionally. Tool installs are best-effort: each only runs if the
+# tool is missing and a failure logs a warning instead of aborting. On a
+# pre-provisioned host (e.g. an OM1 devenv instance) every tool is already
+# present, so the install section is skipped entirely and setup just symlinks.
 
-# Exit on any error
-set -euo pipefail
+# Keep unset-variable and pipe-failure safety. Deliberately NOT `-e`: a failed
+# best-effort install must not abort the run before/after the symlinks.
+set -uo pipefail
 
 log() { echo "[$(date -Iseconds)] $*"; }
+warn() { log "WARN: $*"; }
 
-# Enforce running from the dotfiles repo dir only
-if [ "$(basename "$(pwd)")" != "dotfiles" ]; then
-  log "Please run from the root of the dotfiles repository"
-  exit 1
-fi
+# Resolve the repo root from this script's own location so setup can be run
+# from anywhere (including as a dotfiles provisioning hook).
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+log "Using dotfiles repo at: $REPO_DIR"
 
-# Record repository root so later `cd` calls don't break symlink targets
-REPO_DIR="$(pwd)"
-
-# Detect OS
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-
-# Detect if the system is Alpine Linux
-if [ -f /etc/alpine-release ]; then
-    OS="alpine"
-fi
-
-log "Detected OS: $OS"
-
-# Determine machine architecture and related download vars
+# Architecture, used by the AWS CLI and ECR helper download URLs.
 detect_arch() {
     ARCH=$(uname -m)
     if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
@@ -40,172 +32,17 @@ detect_arch() {
         target="arm64"
         ecr_arch="arm64"
     else
-        log "Unsupported architecture: ${ARCH}"
-        exit 1
+        warn "Unsupported architecture: ${ARCH}"
+        return 1
     fi
 }
 
-# ------------------------------------------------------------
-# uv (Astral)
-# ------------------------------------------------------------
-if ! command -v uv &> /dev/null; then
-    log "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-else
-    log "uv already installed"
-fi
+# ============================================================================
+# Symlink dotfiles (the critical block — runs first, never blocks on installs)
+# ============================================================================
+log "Installing/symlinking dotfiles..."
 
-# Install Antidote
-if [ ! -d "${HOME}/.antidote" ]; then
-  log "Installing Antidote..."
-  git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote"
-else
-    log "Antidote already installed, updating..."
-    (cd "${HOME}/.antidote" && git pull --quiet)
-fi
-
-# Collect apt packages to install (avoids running apt update multiple times)
-apt_packages=()
-
-# Install zsh
-if ! command -v zsh &> /dev/null; then
-    log "Installing zsh..."
-    if [ "$OS" = "darwin" ]; then
-        brew install zsh
-    elif [ "$OS" = "alpine" ]; then
-        apk add --no-cache zsh
-    else
-        apt_packages+=(zsh)
-    fi
-else
-    log "zsh already installed"
-fi
-
-# Ensure less is installed for the git pager
-if ! command -v less &> /dev/null; then
-    log "Installing less..."
-    if [ "$OS" = "darwin" ]; then
-        brew install less
-    elif [ "$OS" = "alpine" ]; then
-        apk add --no-cache less
-    else
-        apt_packages+=(less)
-    fi
-else
-    log "less already installed"
-fi
-
-# Ensure unzip is installed (needed for AWS CLI install)
-if ! command -v unzip &> /dev/null; then
-    log "Installing unzip..."
-    if [ "$OS" = "darwin" ]; then
-        brew install unzip
-    elif [ "$OS" = "alpine" ]; then
-        apk add --no-cache unzip
-    else
-        apt_packages+=(unzip)
-    fi
-else
-    log "unzip already installed"
-fi
-
-# Install collected apt packages in one shot
-if [ ${#apt_packages[@]} -gt 0 ]; then
-    sudo apt update -yqq
-    sudo apt install -yqq "${apt_packages[@]}"
-fi
-
-# ------------------------------------------------------------
-# AWS CLI v2
-# ------------------------------------------------------------
-if command -v aws &> /dev/null || [ -x /usr/local/bin/aws ] || [ -x "$HOME/.local/bin/aws" ]; then
-    log "AWS CLI v2 already installed"
-else
-    log "Installing AWS CLI v2..."
-
-    if [ "$OS" = "alpine" ]; then
-        apk add --no-cache aws-cli
-    else
-        TMP_DIR="$(mktemp -d)"
-        (
-            cd "$TMP_DIR"
-            if [ "$OS" = "darwin" ]; then
-                detect_arch
-                curl -fsSLo AWSCLIV2.pkg "https://awscli.amazonaws.com/AWSCLIV2.pkg"
-                sudo installer -pkg AWSCLIV2.pkg -target /
-            else
-                detect_arch
-                curl -fsSLo awscliv2.zip \
-                  "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip"
-                unzip -q awscliv2.zip
-                ./aws/install --install-dir "$HOME/.local/aws-cli" --bin-dir "$HOME/.local/bin" --update
-            fi
-        )
-        rm -rf "$TMP_DIR"
-    fi
-
-    aws --version
-fi
-
-# Install the AWS Session Manager Plugin
-if ! command -v session-manager-plugin >/dev/null 2>&1; then
-    log "Installing AWS Session Manager Plugin..."
-    if [ "$OS" = "darwin" ]; then
-        brew install --force session-manager-plugin || true
-    elif [ "$OS" = "alpine" ]; then
-        apk add --no-cache aws-session-manager-plugin
-    else
-        detect_arch
-
-        SESSION_MANAGER_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
-        curl -fsSLo /tmp/session-manager-plugin.deb "$SESSION_MANAGER_URL"
-        sudo dpkg -i /tmp/session-manager-plugin.deb
-        rm /tmp/session-manager-plugin.deb
-    fi
-else
-    log "AWS Session Manager Plugin is already installed"
-fi
-
-# Install Docker ECR Credential Helper
-if ! command -v docker-credential-ecr-login &> /dev/null; then
-    log "Installing Docker ECR Credential Helper..."
-    
-    # Detect architecture
-    detect_arch
-    
-    # Map OS to S3 format
-    if [ "$OS" = "darwin" ]; then
-        ecr_os="darwin"
-    elif [ "$OS" = "alpine" ] || [ "$OS" = "linux" ]; then
-        ecr_os="linux"
-    else
-        log "Unsupported OS: ${OS}"
-        exit 1
-    fi
-    
-    # ECR Credential Helper version
-    ECR_CRED_HELPER_VERSION="0.11.0"
-    
-    # Download binary from S3
-    ECR_URL="https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${ECR_CRED_HELPER_VERSION}/${ecr_os}-${ecr_arch}/docker-credential-ecr-login"
-    TMP_BINARY="/tmp/docker-credential-ecr-login"
-    
-    log "Downloading Docker ECR Credential Helper for ${ecr_os}-${ecr_arch}..."
-    curl -fSL "$ECR_URL" -o "$TMP_BINARY"
-    
-    # Make executable and install
-    chmod +x "$TMP_BINARY"
-    sudo mv "$TMP_BINARY" "/usr/local/bin/docker-credential-ecr-login"
-    
-    log "Docker ECR Credential Helper installed successfully"
-else
-    log "Docker ECR Credential Helper is already installed"
-fi
-
-# Copy dotfiles to home directory
-log "Copying dotfiles to home directory..."
-
-# Back up existing real files (skip symlinks from previous runs)
+# Back up existing real files (skip symlinks from previous runs).
 for f in .zshrc .zsh_plugins.txt .p10k.zsh .tmux.conf; do
     if [ -f "$HOME/$f" ] && [ ! -L "$HOME/$f" ]; then
         mv "$HOME/$f" "$HOME/${f}.backup"
@@ -213,14 +50,12 @@ for f in .zshrc .zsh_plugins.txt .p10k.zsh .tmux.conf; do
     fi
 done
 
-# Copy new files
-log "Installing/symlinking zsh configuration files..."
 ln -sfn "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
 ln -sfn "$REPO_DIR/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
 ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
-# Install gitconfig (skip in devcontainers — they auto-load host gitconfig)
+# gitconfig (skip in devcontainers — they auto-load the host gitconfig).
 if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dockerenv" ]; then
     if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
         mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
@@ -229,41 +64,125 @@ if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dock
     ln -sfn "$REPO_DIR/git/gitconfig_template" "$HOME/.gitconfig"
     log "Installed/symlinked ~/.gitconfig"
 
-    # Set up user-specific git config in ~/.gitconfig.local
+    # User-specific identity lives in ~/.gitconfig.local (overrides the template).
     if [ ! -f "$HOME/.gitconfig.local" ]; then
         GIT_USER_NAME="${USER:-$(whoami)}"
         GIT_USER_EMAIL="${GIT_USER_NAME}@users.noreply.github.com"
-        log "Setting up git user identity as '${GIT_USER_NAME}' <${GIT_USER_EMAIL}>..."
+        log "Setting up git identity as '${GIT_USER_NAME}' <${GIT_USER_EMAIL}>..."
         cat > "$HOME/.gitconfig.local" <<EOF
 [user]
     name     = $GIT_USER_NAME
     email    = $GIT_USER_EMAIL
 EOF
-        log "Created ~/.gitconfig.local with user identity"
+        log "Created ~/.gitconfig.local"
     else
-        log "~/.gitconfig.local already exists, skipping user identity setup"
+        log "~/.gitconfig.local already exists, skipping identity setup"
     fi
 else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"
 fi
 
-# Copy docker config for non-macOS systems
-if [ "$OS" != "darwin" ]; then
-    mkdir -p "$HOME/.docker"
-    if [ -f "$HOME/.docker/config.json" ] && [ ! -L "$HOME/.docker/config.json" ]; then
-        mv "$HOME/.docker/config.json" "$HOME/.docker/config.json.backup"
-        log "Backed up existing docker config json"
-    fi
+# Docker config (enables the ECR credential helper).
+mkdir -p "$HOME/.docker"
+if [ -f "$HOME/.docker/config.json" ] && [ ! -L "$HOME/.docker/config.json" ]; then
+    mv "$HOME/.docker/config.json" "$HOME/.docker/config.json.backup"
+    log "Backed up existing docker config.json"
+fi
+ln -sfn "$REPO_DIR/docker/config.json" "$HOME/.docker/config.json"
+log "Installed/symlinked ~/.docker/config.json"
 
-    ln -sfn "$REPO_DIR/docker/config.json" "$HOME/.docker/config.json"
-    log "Installed/symlinked ~/.docker/config.json"
+# ============================================================================
+# Ensure antidote (plugin manager). .zshrc runs `antidote load` on first launch.
+# ============================================================================
+if [ ! -d "${HOME}/.antidote" ]; then
+    log "Installing antidote..."
+    git clone --depth=1 https://github.com/mattmc3/antidote.git "${HOME}/.antidote" \
+        || warn "antidote clone failed; first shell launch will retry the load"
+else
+    log "antidote already installed, updating..."
+    (cd "${HOME}/.antidote" && git pull --quiet) || warn "antidote update failed (continuing)"
 fi
 
-# Pre-download antidote plugins so the first shell launch doesn't error
-# with missing source files while repos are still cloning.
-log "Pre-downloading antidote plugins..."
-rm -f "$HOME/.zsh_plugins.zsh"
-zsh -c 'source "$HOME/.antidote/antidote.zsh" && antidote load' 2>/dev/null
+# ============================================================================
+# Best-effort tool installs — only when missing. Skipped on pre-provisioned
+# hosts. A failure here warns and continues; the symlinks above already landed.
+# ============================================================================
 
-log "Dotfiles installation completed successfully!"
-log "Please restart your shell or run 'exec zsh' to apply changes."
+# uv (Astral)
+if ! command -v uv &> /dev/null; then
+    log "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh || warn "uv install failed"
+else
+    log "uv already installed"
+fi
+
+# apt packages (batched to avoid multiple `apt update` runs).
+apt_packages=()
+for pkg in zsh less unzip; do
+    command -v "$pkg" &> /dev/null || apt_packages+=("$pkg")
+done
+if [ ${#apt_packages[@]} -gt 0 ]; then
+    log "Installing apt packages: ${apt_packages[*]}"
+    if sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
+        sudo apt update -yqq && sudo apt install -yqq "${apt_packages[@]}" \
+            || warn "apt install failed for: ${apt_packages[*]}"
+    else
+        warn "no sudo available; skipping apt packages: ${apt_packages[*]}"
+    fi
+fi
+
+# AWS CLI v2
+if command -v aws &> /dev/null || [ -x /usr/local/bin/aws ] || [ -x "$HOME/.local/bin/aws" ]; then
+    log "AWS CLI v2 already installed"
+elif detect_arch; then
+    log "Installing AWS CLI v2..."
+    TMP_DIR="$(mktemp -d)"
+    (
+        cd "$TMP_DIR"
+        curl -fsSLo awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" \
+            && unzip -q awscliv2.zip \
+            && ./aws/install --install-dir "$HOME/.local/aws-cli" --bin-dir "$HOME/.local/bin" --update
+    ) || warn "AWS CLI install failed"
+    rm -rf "$TMP_DIR"
+fi
+
+# AWS Session Manager Plugin
+if ! command -v session-manager-plugin >/dev/null 2>&1; then
+    if detect_arch; then
+        log "Installing AWS Session Manager Plugin..."
+        SSM_URL="https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${target}/session-manager-plugin.deb"
+        if curl -fsSLo /tmp/session-manager-plugin.deb "$SSM_URL" \
+            && { sudo -n true 2>/dev/null || sudo true 2>/dev/null; }; then
+            sudo dpkg -i /tmp/session-manager-plugin.deb || warn "SSM plugin dpkg install failed"
+        else
+            warn "could not download SSM plugin or no sudo; skipping"
+        fi
+        rm -f /tmp/session-manager-plugin.deb
+    fi
+else
+    log "AWS Session Manager Plugin already installed"
+fi
+
+# Docker ECR Credential Helper
+if ! command -v docker-credential-ecr-login &> /dev/null; then
+    if detect_arch; then
+        log "Installing Docker ECR Credential Helper..."
+        ECR_CRED_HELPER_VERSION="0.11.0"
+        ECR_URL="https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${ECR_CRED_HELPER_VERSION}/linux-${ecr_arch}/docker-credential-ecr-login"
+        if curl -fSL "$ECR_URL" -o /tmp/docker-credential-ecr-login \
+            && { sudo -n true 2>/dev/null || sudo true 2>/dev/null; }; then
+            chmod +x /tmp/docker-credential-ecr-login
+            sudo mv /tmp/docker-credential-ecr-login /usr/local/bin/docker-credential-ecr-login \
+                && log "Docker ECR Credential Helper installed" \
+                || warn "ECR helper install failed"
+        else
+            warn "could not download ECR helper or no sudo; skipping"
+        fi
+        rm -f /tmp/docker-credential-ecr-login
+    fi
+else
+    log "Docker ECR Credential Helper already installed"
+fi
+
+log "Dotfiles installation completed."
+log "Restart your shell or run 'exec zsh' to apply changes."
