@@ -56,27 +56,41 @@ ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # gitconfig (skip in devcontainers — they auto-load the host gitconfig).
+#
+# ~/.gitconfig is a REAL machine-local file that includes the shared template.
+# It must NOT be a symlink to the tracked template: `git config --global` and
+# `gh auth setup-git` write to ~/.gitconfig, and a symlink would route those
+# machine-specific writes (credential helpers, etc.) into version control.
 if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dockerenv" ]; then
-    if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
-        mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
-        log "Backed up existing .gitconfig"
-    fi
-    ln -sfn "$REPO_DIR/git/gitconfig_template" "$HOME/.gitconfig"
-    log "Installed/symlinked ~/.gitconfig"
+    GITCONFIG_INCLUDE="$REPO_DIR/git/gitconfig_template"
 
-    # User-specific identity lives in ~/.gitconfig.local (overrides the template).
-    if [ ! -f "$HOME/.gitconfig.local" ]; then
+    # Migrate the old symlink install (~/.gitconfig -> tracked template).
+    if [ -L "$HOME/.gitconfig" ]; then
+        rm -f "$HOME/.gitconfig"
+        log "Removed legacy ~/.gitconfig symlink"
+    fi
+
+    if [ ! -f "$HOME/.gitconfig" ]; then
         GIT_USER_NAME="${USER:-$(whoami)}"
         GIT_USER_EMAIL="${GIT_USER_NAME}@users.noreply.github.com"
-        log "Setting up git identity as '${GIT_USER_NAME}' <${GIT_USER_EMAIL}>..."
-        cat > "$HOME/.gitconfig.local" <<EOF
+        log "Creating ~/.gitconfig (includes template; identity ${GIT_USER_NAME} <${GIT_USER_EMAIL}>)..."
+        cat > "$HOME/.gitconfig" <<EOF
+[include]
+    path = $GITCONFIG_INCLUDE
 [user]
-    name     = $GIT_USER_NAME
-    email    = $GIT_USER_EMAIL
+    name  = $GIT_USER_NAME
+    email = $GIT_USER_EMAIL
 EOF
-        log "Created ~/.gitconfig.local"
     else
-        log "~/.gitconfig.local already exists, skipping identity setup"
+        # Real file already exists — keep its identity/credentials, just make
+        # sure it pulls in the shared template (idempotent).
+        if ! git config --global --get-all include.path 2>/dev/null | grep -qxF "$GITCONFIG_INCLUDE"; then
+            git config --global --add include.path "$GITCONFIG_INCLUDE" \
+                && log "Added template include to existing ~/.gitconfig" \
+                || warn "could not add include.path to ~/.gitconfig"
+        else
+            log "~/.gitconfig already includes the template"
+        fi
     fi
 else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"

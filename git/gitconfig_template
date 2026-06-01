@@ -1,3 +1,10 @@
+# Shared git configuration, tracked in the dotfiles repo.
+#
+# This file is meant to be *included* by a real ~/.gitconfig (see `setup`),
+# NOT symlinked to it. Keep it free of machine-specific state: identity and
+# credential helpers live in ~/.gitconfig so that `git config --global` and
+# `gh auth setup-git` writes stay local instead of dirtying this tracked file.
+
 [core]
 	editor   = vim
 	pager    = less -F
@@ -33,11 +40,3 @@
 
 [commit]
     verbose  = true
-
-[user]
-	name = Jason Reslock
-	email = jreslock@users.noreply.github.com
-
-# Machine-specific overrides (must be last to take precedence)
-[include]
-    path     = ~/.gitconfig.local
