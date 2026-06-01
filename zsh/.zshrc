@@ -1,6 +1,11 @@
 # ============================================================================
 # Powerlevel10k Instant Prompt - MUST be first (before any output/commands)
 # ============================================================================
+# The first shell after a rebuild prints one-time "antidote cloning..." output
+# while plugins are fetched. `quiet` tells instant prompt that output is
+# expected and suppresses the otherwise-alarming warning. Steady-state launches
+# produce no output, so this is invisible after the first run.
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
@@ -25,18 +30,24 @@ fi
 if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     source "$HOME/.antidote/antidote.zsh"
 
-    # Set ZSH to antidote's oh-my-zsh installation
     export ANTIDOTE_HOME="${ANTIDOTE_HOME:-$(antidote home)}"
-    export ZSH="$ANTIDOTE_HOME/https-COLON--SLASH--SLASH-github.com-SLASH-ohmyzsh-SLASH-ohmyzsh"
 
     # ZSH_CACHE_DIR is normally set by oh-my-zsh.sh, but we load path:lib
-    # directly so it's never defined. Plugins like docker and uv need it.
-    export ZSH_CACHE_DIR="${ZSH_CACHE_DIR:-$ZSH/cache}"
+    # directly so it's never defined. Plugins like docker and uv write
+    # completion dumps here. Keep it OUTSIDE the antidote clone tree: a
+    # directory sitting at the ohmyzsh clone path makes antidote think the
+    # bundle is already cloned and skip it, leaving broken `source` lines.
+    export ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
     [[ -d "$ZSH_CACHE_DIR/completions" ]] || mkdir -p "$ZSH_CACHE_DIR/completions"
 
     # antidote load reads ~/.zsh_plugins.txt and generates a static
     # cache at ~/.zsh_plugins.zsh, regenerating when the txt changes
     antidote load
+
+    # Point ZSH at the real ohmyzsh clone. Ask antidote for the path rather
+    # than hardcoding it — the directory naming is an antidote-version detail
+    # (2.x uses github.com/owner/repo; 1.x used a URL-encoded name).
+    export ZSH="$(antidote path ohmyzsh/ohmyzsh 2>/dev/null)"
 
     # Re-run compinit to pick up fpath entries added by zsh-completions
     compinit -u -d "$zcompdump"

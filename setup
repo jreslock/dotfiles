@@ -103,6 +103,21 @@ else
     (cd "${HOME}/.antidote" && git pull --quiet) || warn "antidote update failed (continuing)"
 fi
 
+# Drop any stale static plugin cache so the next shell regenerates it against
+# the current set of cloned bundles. Without this, a rebuild that keeps $HOME
+# but wipes ~/.cache leaves a cache pointing at plugins that no longer exist.
+# Regeneration happens lazily on first shell launch (no blocking pre-download).
+rm -f "$HOME/.zsh_plugins.zsh"
+
+# Remove any legacy URL-encoded ohmyzsh clone left by older antidote (1.x) or
+# by the previous .zshrc that pre-created it. If this empty/partial dir exists,
+# antidote 2.x treats the bundle as already cloned and skips it, leaving broken
+# `source` lines. antidote re-clones to github.com/ohmyzsh/ohmyzsh on next load.
+ANTIDOTE_HOME_DIR="$(zsh -c 'source "$HOME/.antidote/antidote.zsh" 2>/dev/null && antidote home' 2>/dev/null)"
+if [ -n "$ANTIDOTE_HOME_DIR" ]; then
+    rm -rf "$ANTIDOTE_HOME_DIR"/https-COLON--SLASH--SLASH-github.com-SLASH-ohmyzsh-SLASH-ohmyzsh
+fi
+
 # ============================================================================
 # Best-effort tool installs — only when missing. Skipped on pre-provisioned
 # hosts. A failure here warns and continues; the symlinks above already landed.
