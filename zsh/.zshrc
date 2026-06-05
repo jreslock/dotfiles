@@ -64,6 +64,7 @@ fi
 alias c="clear"
 alias clb="clean_local_branches"
 alias es="exec zsh"
+alias fre="fleet-reattach"
 alias gitauth="gh auth login && gh auth setup-git"
 alias ll="ls -lh"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
