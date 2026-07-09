@@ -53,7 +53,6 @@ done
 ln -sfn "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
 ln -sfn "$REPO_DIR/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
 ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
-ln -sfn "$REPO_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 # gitconfig (skip in devcontainers — they auto-load the host gitconfig).
 #

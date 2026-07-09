@@ -147,3 +147,6 @@ function clean_local_branches() {
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
+
+# Cortex CLI completion (disable via /settings in cortex)
+[[ -s ~/.zsh/completions/cortex.zsh ]] && source ~/.zsh/completions/cortex.zsh
