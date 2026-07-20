@@ -72,6 +72,7 @@ alias pip="pip3"
 alias pull="git pull"
 alias push="git push"
 alias python="python3"
+alias ssh='ghostty +ssh --'
 alias ssologin="unsetprofile && aws sso login"
 alias tti="tofu init"
 alias ttplf="tofu plan -lock=false"
@@ -150,3 +151,10 @@ zstyle ':completion:*' menu select
 
 # Cortex CLI completion (disable via /settings in cortex)
 [[ -s ~/.zsh/completions/cortex.zsh ]] && source ~/.zsh/completions/cortex.zsh
+
+# Restore a terminal wedged by a dead remote session (mouse-mode garbage,
+# no echo, etc.) without a full 'reset'
+fixterm() {
+  printf '\e[?1000l\e[?1002l\e[?1003l\e[?1005l\e[?1006l\e[?1015l\e[?2004l\e[?25h'
+  stty sane
+}
