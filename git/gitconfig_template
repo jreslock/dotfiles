@@ -1,9 +1,15 @@
 # Shared git configuration, tracked in the dotfiles repo.
 #
 # This file is meant to be *included* by a real ~/.gitconfig (see `setup`),
-# NOT symlinked to it. Keep it free of machine-specific state: identity and
-# credential helpers live in ~/.gitconfig so that `git config --global` and
-# `gh auth setup-git` writes stay local instead of dirtying this tracked file.
+# NOT symlinked to it. Keep it free of machine-specific state: credential
+# helpers live in ~/.gitconfig so that `gh auth setup-git` writes stay local
+# instead of dirtying this tracked file. Identity lives here so ephemeral
+# machines (devenv rebuilds recreate ~/.gitconfig) always have it; a
+# machine-specific override still wins via `git config --global user.email`.
+
+[user]
+    name     = Jason Reslock
+    email    = jreslock@users.noreply.github.com
 
 [core]
 	editor   = vim
