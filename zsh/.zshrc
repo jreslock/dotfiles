@@ -14,6 +14,17 @@ fi
 [[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
 
 # ============================================================================
+# Claude Code
+# ============================================================================
+# Set here rather than in ~/.claude/settings.json so that file stays byte-
+# identical across the Mac and the devenv. The `env` block in settings.json
+# does literal assignment with no shell expansion, so it cannot use $HOME and
+# would need a different absolute path per machine. The workspace lives at
+# ~/ai-dev/claude-workspace on both (on the devenv that's a symlink into
+# /mnt/devdata), so $HOME resolves correctly without an OS conditional.
+export CLAUDE_WORKSPACE_DIR="$HOME/ai-dev/claude-workspace"
+
+# ============================================================================
 # Zsh Completion System - Initial compinit so compdef is available for plugins
 # ============================================================================
 autoload -Uz compinit
