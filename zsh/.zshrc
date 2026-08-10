@@ -14,6 +14,23 @@ fi
 [[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
 
 # ============================================================================
+# Headless auth-URL clipboard bridge
+# ============================================================================
+# Snapshot this pane's tty on every shell start so the xdg-open shim (see
+# ~/.local/bin/xdg-open) can still OSC 52-copy to it even from subprocesses
+# that detach from the controlling terminal (e.g. Python's webbrowser
+# BackgroundBrowser). Only wires up $BROWSER when the shim is actually present
+# so this stays inert on machines that don't have it (e.g. the Mac).
+export PANE_TTY="$(tty 2>/dev/null)"
+[[ -x "$HOME/.local/bin/xdg-open" ]] && export BROWSER="$HOME/.local/bin/xdg-open"
+
+# Pin the Snowflake connector's EXTERNALBROWSER/oauth-code local callback to a
+# fixed port (default is OS-ephemeral, i.e. a different port every login) so a
+# single permanent local SSH port-forward covers every future login instead of
+# chasing a new port each time. See snowflake.connector.auth.webbrowser.
+export SF_AUTH_SOCKET_PORT=38888
+
+# ============================================================================
 # Claude Code
 # ============================================================================
 # Set here rather than in ~/.claude/settings.json so that file stays byte-
@@ -84,7 +101,6 @@ alias pull="git pull"
 alias push="git push"
 alias python="python3"
 alias ssh='ghostty +ssh --'
-alias ssologin="unsetprofile && aws sso login"
 alias tti="tofu init"
 alias ttplf="tofu plan -lock=false"
 alias ttlockgen="tofu providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
@@ -105,6 +121,18 @@ function setprofile() {
 function unsetprofile() {
   unset AWS_PROFILE
   echo "AWS_PROFILE unset"
+}
+
+function ssologin() {
+  unsetprofile
+  # PKCE's browser redirect needs a localhost callback, which doesn't reach
+  # anywhere useful on a headless Linux box connected over SSH. Device code
+  # avoids that entirely, so use it there; Mac has a real local browser.
+  if [[ "$(uname)" == "Linux" ]]; then
+    aws sso login --use-device-code "$@"
+  else
+    aws sso login "$@"
+  fi
 }
 
 function get_account_id() {
@@ -169,3 +197,5 @@ fixterm() {
   printf '\e[?1000l\e[?1002l\e[?1003l\e[?1005l\e[?1006l\e[?1015l\e[?2004l\e[?25h'
   stty sane
 }
+
+. "$HOME/.local/bin/env"
