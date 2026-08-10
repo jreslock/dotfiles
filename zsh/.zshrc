@@ -16,12 +16,20 @@ fi
 # ============================================================================
 # Headless auth-URL clipboard bridge
 # ============================================================================
-# Snapshot this pane's tty on every shell start so the xdg-open shim (see
-# ~/.local/bin/xdg-open) can still OSC 52-copy to it even from subprocesses
-# that detach from the controlling terminal (e.g. Python's webbrowser
-# BackgroundBrowser). Only wires up $BROWSER when the shim is actually present
-# so this stays inert on machines that don't have it (e.g. the Mac).
-export PANE_TTY="$(tty 2>/dev/null)"
+# Snapshot this pane's tty so the xdg-open shim (see ~/.local/bin/xdg-open)
+# can still OSC 52-copy to it even from subprocesses that detach from the
+# controlling terminal (e.g. Python's webbrowser BackgroundBrowser). Done via
+# a precmd hook rather than inline here: P10k's instant-prompt feature
+# detaches stdin during shell startup, so a `tty` run synchronously at this
+# point in the file captures the literal string "not a tty" instead of a real
+# path. precmd runs once stdin is reattached, right before the real prompt
+# displays, and the /dev/* guard means it only ever overwrites PANE_TTY with
+# a real path, never with that failure string.
+_pane_tty_refresh() {
+  local t="$(tty 2>/dev/null)"
+  [[ "$t" == /dev/* ]] && export PANE_TTY="$t"
+}
+precmd_functions+=(_pane_tty_refresh)
 [[ -x "$HOME/.local/bin/xdg-open" ]] && export BROWSER="$HOME/.local/bin/xdg-open"
 
 # Pin the Snowflake connector's EXTERNALBROWSER/oauth-code local callback to a
