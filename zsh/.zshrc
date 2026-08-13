@@ -100,7 +100,6 @@ fi
 alias c="clear"
 alias clb="clean_local_branches"
 alias es="exec zsh"
-alias fre="fleet-reattach"
 alias gitauth="gh auth login && gh auth setup-git"
 alias ll="ls -lh"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
@@ -108,8 +107,7 @@ alias pip="pip3"
 alias pull="git pull"
 alias push="git push"
 alias python="python3"
-alias ssh='ghostty +ssh --'
-alias tti="tofu init"
+command -v ghostty &> /dev/null && alias ssh='ghostty +ssh --'
 alias ttplf="tofu plan -lock=false"
 alias ttlockgen="tofu providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
 
@@ -161,36 +159,6 @@ function clean_local_branches() {
   git remote prune origin
   git branch -a | grep -Ev "(^\*|master|main|origin)" | xargs -n 1 git branch -D
 }
-
-# ============================================================================
-# AWS SSO Check - Deferred to background for faster startup
-# ============================================================================
-# Run AWS check in background to avoid blocking shell startup
-# Only runs once per session and only in interactive shells
-#
-# Commented out for remote EC2 developent which uses an instance
-# profile for authenticating and accessing AWS
-#
-#if [[ -o interactive ]] && command -v aws &> /dev/null && [[ -z "$AWS_CHECK_DONE" ]]; then
-#  export AWS_CHECK_DONE=1
-#  # Run in background to avoid blocking startup
-#  (aws sts get-caller-identity --profile default > /dev/null 2>&1 || {
-#    # Only show message if not logged in (avoid noise if command fails for other reasons)
-#    if ! aws sts get-caller-identity --profile default > /dev/null 2>&1; then
-#      echo "AWS SSO: Not logged in (run 'ssologin' to authenticate)" >&2
-#    fi
-#  }) &!
-#fi
-
-# ============================================================================
-# GitHub Token - Cached to avoid repeated calls
-# ============================================================================
-# Only set if gh is available, not already set, and auth token is non-empty
-#if [[ -o interactive ]] && command -v gh &> /dev/null && [[ -z "$GH_TOKEN" ]]; then
-#  _gh_token=$(gh auth token 2>/dev/null)
-#  [[ -n "$_gh_token" ]] && export GH_TOKEN="$_gh_token"
-#  unset _gh_token
-#fi
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 

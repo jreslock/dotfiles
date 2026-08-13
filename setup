@@ -43,7 +43,7 @@ detect_arch() {
 log "Installing/symlinking dotfiles..."
 
 # Back up existing real files (skip symlinks from previous runs).
-for f in .zshrc .zsh_plugins.txt .p10k.zsh .tmux.conf; do
+for f in .zshrc .zsh_plugins.txt .p10k.zsh; do
     if [ -f "$HOME/$f" ] && [ ! -L "$HOME/$f" ]; then
         mv "$HOME/$f" "$HOME/${f}.backup"
         log "Backed up existing $f"
