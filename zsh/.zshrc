@@ -5,6 +5,10 @@
 # while plugins are fetched. `quiet` tells instant prompt that output is
 # expected and suppresses the otherwise-alarming warning. Steady-state launches
 # produce no output, so this is invisible after the first run.
+#
+# .p10k.zsh must set quiet too: it is sourced long after this preamble, and
+# p10k decides whether to warn from the value in effect at the END of init,
+# so a `verbose` there silently overrides this one.
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -190,5 +194,3 @@ fixterm() {
   printf '\e[?1000l\e[?1002l\e[?1003l\e[?1005l\e[?1006l\e[?1015l\e[?2004l\e[?25h'
   stty sane
 }
-
-. "$HOME/.local/bin/env"

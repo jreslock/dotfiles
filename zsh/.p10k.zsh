@@ -173,7 +173,14 @@
   #   - verbose: Enable instant prompt and print a warning when detecting console output during
   #              zsh initialization. Choose this if you've never tried instant prompt, haven't
   #              seen the warning, or if you are unsure what this all means.
-  typeset -g POWERLEVEL9K_INSTANT_PROMPT=verbose
+  # `quiet`, not the generated default of `verbose`: .zshrc sets quiet before the
+  # instant-prompt preamble because the first shell after a rebuild prints
+  # one-time "antidote cloning..." output. That setting was being clobbered
+  # here — this file is sourced long after the preamble, and p10k decides
+  # whether to warn from the value in effect at the END of init — so the
+  # warning fired anyway and the comment in .zshrc was describing a
+  # suppression that never happened. Both places have to agree.
+  typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 
   # Hot reload allows you to change POWERLEVEL9K options after Powerlevel10k has been initialized.
   # For example, you can type POWERLEVEL9K_BACKGROUND=red and see your prompt turn red. Hot reload
