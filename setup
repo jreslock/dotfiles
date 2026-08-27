@@ -81,15 +81,28 @@ if [ -z "${REMOTE_CONTAINERS:-}" ] && [ -z "${CODESPACES:-}" ] && [ ! -f "/.dock
     email = $GIT_USER_EMAIL
 EOF
     else
-        # Real file already exists — keep its identity/credentials, just make
-        # sure it pulls in the shared template (idempotent).
-        if ! git config --global --get-all include.path 2>/dev/null | grep -qxF "$GITCONFIG_INCLUDE"; then
-            git config --global --add include.path "$GITCONFIG_INCLUDE" \
-                && log "Added template include to existing ~/.gitconfig" \
-                || warn "could not add include.path to ~/.gitconfig"
-        else
-            log "~/.gitconfig already includes the template"
-        fi
+        # Real file already exists — keep its identity/credentials, just
+        # re-point the template include.
+        #
+        # Prune before adding, rather than adding only when absent. `--add`
+        # alone accumulated a second entry whenever the repo moved, and the
+        # stale absolute path kept resolving for as long as the old clone
+        # existed — so relocating a checkout never self-healed, and the old
+        # template silently stayed in effect. Pruning first makes a re-run
+        # from a new location authoritative.
+        #
+        # The value-pattern is a POSIX ERE matched against each value, so it
+        # only touches includes ending in this repo's own template path;
+        # unrelated include.path entries are left alone. Both spellings are
+        # matched: the file was git/gitconfig.template before 7b3244c, and a
+        # stale include using the old name is dead weight git silently
+        # ignores, so it survives forever unless pruned here. --unset-all
+        # exits 5 when nothing matches (first run on a machine) — not an
+        # error here.
+        git config --global --unset-all include.path '/git/gitconfig[._]template$' 2>/dev/null || true
+        git config --global --add include.path "$GITCONFIG_INCLUDE" \
+            && log "Pointed ~/.gitconfig template include at $GITCONFIG_INCLUDE" \
+            || warn "could not set include.path in ~/.gitconfig"
     fi
 else
     log "Devcontainer detected, skipping gitconfig (auto-loaded from host)"

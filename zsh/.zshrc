@@ -50,15 +50,28 @@ export SF_AUTH_SOCKET_PORT=38888
 export CLAUDE_WORKSPACE_DIR="$HOME/ai-dev/claude-workspace"
 
 # ============================================================================
-# Zsh Completion System - Initial compinit so compdef is available for plugins
+# Zsh Completion System
 # ============================================================================
+# compinit is by far the most expensive thing in this file: a dump-building
+# run costs ~500ms, a cached one ~19ms. Two constraints pull in opposite
+# directions — `compdef` must exist BEFORE `antidote load`, because the OMZ
+# plugins call it at load time; but the dump must be built AFTER, because
+# kind:fpath bundles (zsh-completions) and ~/.zfunc only reach fpath then.
+#
+# So: one always-cheap `-C` run up front purely to define compdef, and one
+# dump-building run after plugins, guarded to at most once every 24h. The
+# guard is the whole point — steady-state launches reuse the dump and pay
+# ~19ms instead of ~500ms.
 autoload -Uz compinit
-local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
-if [[ -n "$zcompdump"(#qN.mh-24) ]]; then
-    compinit -C -d "$zcompdump"
-else
-    compinit -u -d "$zcompdump"
-fi
+zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+
+# -C reuses the existing dump with no scan and no security check. It still
+# defines compdef, which is all that's needed at this point.
+compinit -C -d "$zcompdump"
+
+# fpath additions must precede the dump-building run below. ~/.zfunc is
+# optional (tools like poetry/rustup drop completions there), hence the guard.
+[[ -d ~/.zfunc ]] && fpath+=(~/.zfunc)
 
 # ============================================================================
 # Antidote Plugin Manager - Optimized initialization
@@ -85,8 +98,14 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]]; then
     # (2.x uses github.com/owner/repo; 1.x used a URL-encoded name).
     export ZSH="$(antidote path ohmyzsh/ohmyzsh 2>/dev/null)"
 
-    # Re-run compinit to pick up fpath entries added by zsh-completions
-    compinit -u -d "$zcompdump"
+    # The one dump-building compinit: picks up fpath entries added above and
+    # by zsh-completions. Only rebuilds when the dump is missing or older than
+    # 24h; otherwise the -C run above already loaded it and there's nothing to
+    # do. New completions therefore appear within a day, or immediately after
+    # `rm ~/.zcompdump`.
+    if [[ -z "$zcompdump"(#qN.mh-24) ]]; then
+        compinit -u -d "$zcompdump"
+    fi
 fi
 
 # ============================================================================
@@ -159,8 +178,6 @@ function clean_local_branches() {
   git remote prune origin
   git branch -a | grep -Ev "(^\*|master|main|origin)" | xargs -n 1 git branch -D
 }
-
-fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
 
