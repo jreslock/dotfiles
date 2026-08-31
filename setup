@@ -118,6 +118,35 @@ ln -sfn "$REPO_DIR/docker/config.json" "$HOME/.docker/config.json"
 log "Installed/symlinked ~/.docker/config.json"
 
 # ============================================================================
+# Terminfo for the local terminal emulator
+# ============================================================================
+# Ghostty sets TERM=xterm-ghostty, an entry that only exists in ncurses 6.5+.
+# Ubuntu 24.04 ships 6.4, so on a freshly built devenv the entry is missing and
+# zle loses cursor addressing: keystrokes appear twice and backspace is inert.
+# Ghostty's ssh integration would normally push it on connect, but it caches
+# hosts it has already seeded, so after a rebuild wipes $HOME it stays broken.
+#
+# Compile into ~/.terminfo (no sudo, and ncurses prefers it over the system db).
+# Guarded on the entry being unresolvable so this is a no-op on the Mac, where
+# Ghostty already installs its own, higher-fidelity copy.
+if [ -d "$REPO_DIR/terminfo" ]; then
+    for ti in "$REPO_DIR"/terminfo/*.terminfo; do
+        [ -e "$ti" ] || continue
+        entry="$(basename "$ti" .terminfo)"
+        if infocmp "$entry" > /dev/null 2>&1; then
+            log "terminfo entry '$entry' already resolves, skipping"
+        elif command -v tic > /dev/null 2>&1; then
+            log "Installing terminfo entry '$entry' into ~/.terminfo..."
+            mkdir -p "$HOME/.terminfo"
+            tic -x -o "$HOME/.terminfo" "$ti" \
+                || warn "tic failed for $entry; terminal may misbehave under TERM=$entry"
+        else
+            warn "tic not found; cannot install terminfo entry '$entry'"
+        fi
+    done
+fi
+
+# ============================================================================
 # Ensure antidote (plugin manager). .zshrc runs `antidote load` on first launch.
 # ============================================================================
 if [ ! -d "${HOME}/.antidote" ]; then
@@ -150,9 +179,14 @@ fi
 # ============================================================================
 
 # uv (Astral)
+# INSTALLER_NO_MODIFY_PATH: the installer otherwise appends a `. ~/.local/bin/env`
+# line to ~/.zshrc, which is a symlink INTO this repo -- so it dirties a tracked
+# file on every rebuild. The line is redundant anyway; .zshrc already puts
+# ~/.local/bin on PATH near the top.
 if ! command -v uv &> /dev/null; then
     log "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh || warn "uv install failed"
+    curl -LsSf https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh \
+        || warn "uv install failed"
 else
     log "uv already installed"
 fi
