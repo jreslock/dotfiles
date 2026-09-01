@@ -54,6 +54,15 @@ ln -sfn "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
 ln -sfn "$REPO_DIR/zsh/.zsh_plugins.txt" "$HOME/.zsh_plugins.txt"
 ln -sfn "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 
+# Helper scripts on PATH. ~/.zshrc guards on `[[ -x ]]` before exporting
+# BROWSER to the xdg-open shim, so a missing symlink here doesn't error --
+# browser-popup auth just goes back to failing with `spawn xdg-open ENOENT`.
+mkdir -p "$HOME/.local/bin"
+for f in "$REPO_DIR"/bin/*; do
+    ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"
+done
+log "Installed/symlinked ~/.local/bin helper scripts"
+
 # gitconfig (skip in devcontainers — they auto-load the host gitconfig).
 #
 # ~/.gitconfig is a REAL machine-local file that includes the shared template.

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+# Headless `xdg-open` shim: copy the URL to the *local* clipboard via OSC 52.
+#
+# This host has no browser and no xdg-utils, so anything that tries to pop one
+# open (AWS SSO, Snowflake EXTERNALBROWSER/OAuth, gh auth) dies with
+# `spawn xdg-open ENOENT`. Rather than install the real xdg-open -- which would
+# only fail differently, having no display to open into -- this shim satisfies
+# the same contract by pushing the URL over the SSH connection to whatever
+# terminal is driving the session, where the user can paste it into a real
+# browser.
+#
+# ~/.zshrc exports BROWSER to this path, so Python's `webbrowser` module and
+# most CLIs pick it up without any per-tool configuration.
+#
+# Always exits 0. Callers treat a non-zero exit as "no browser available" and
+# fall back to a degraded flow (or abort); the URL is on the clipboard either
+# way, so reporting success is the accurate answer.
+
+set -uo pipefail
+
+url="${1-}"
+if [ -z "$url" ]; then
+    echo "usage: xdg-open <url>" >&2
+    exit 1
+fi
+
+# Where to write the escape sequence.
+#
+# OSC 52 is only meaningful when written to a terminal device -- the sequence
+# travels back up the SSH connection and the terminal emulator interprets it.
+# /dev/tty is the natural target, but it resolves to the *controlling*
+# terminal, and the callers that need this shim most are precisely the ones
+# that have detached from theirs: Python's webbrowser.BackgroundBrowser spawns
+# the browser with stdin/stdout/stderr redirected to /dev/null, so /dev/tty
+# either fails to open or points nowhere useful.
+#
+# ~/.zshrc's precmd hook snapshots the interactive pane's tty into PANE_TTY for
+# exactly this case. Prefer it, fall back to /dev/tty for direct invocations
+# from a shell that still has one.
+tty_target=""
+for candidate in "${PANE_TTY-}" /dev/tty; do
+    if [ -n "$candidate" ] && [ -w "$candidate" ]; then
+        tty_target="$candidate"
+        break
+    fi
+done
+
+payload=$(printf '%s' "$url" | base64 | tr -d '\n')
+
+if [ -n "$tty_target" ]; then
+    # OSC 52: ESC ] 52 ; c ; <base64> BEL -- "c" selects the CLIPBOARD
+    # selection. tmux and screen swallow unrecognised OSC sequences instead of
+    # forwarding them to the outer terminal, so wrap the payload in their
+    # passthrough form when running inside one.
+    if [ -n "${TMUX-}" ]; then
+        printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$payload" > "$tty_target"
+    elif case "${TERM-}" in screen*) true ;; *) false ;; esac; then
+        printf '\033P\033]52;c;%s\a\033\\' "$payload" > "$tty_target"
+    else
+        printf '\033]52;c;%s\a' "$payload" > "$tty_target"
+    fi
+
+    # Echo the URL as well. OSC 52 clipboard writes are disabled by default in
+    # some terminals (xterm's allowWindowOps, older VTE), and the failure is
+    # silent -- nothing comes back to say the write was refused. Printing the
+    # URL means there is always something to select by hand.
+    printf '\n[xdg-open] copied to clipboard:\n%s\n\n' "$url" > "$tty_target"
+else
+    # No writable terminal at all. stderr is the last resort; it may be
+    # /dev/null, but there is nothing else left to try.
+    printf '[xdg-open] no terminal to copy to, open manually:\n%s\n' "$url" >&2
+fi
+
+exit 0
