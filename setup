@@ -126,6 +126,34 @@ fi
 ln -sfn "$REPO_DIR/docker/config.json" "$HOME/.docker/config.json"
 log "Installed/symlinked ~/.docker/config.json"
 
+# herdr config. Only config.toml is tracked -- the rest of ~/.config/herdr
+# (socket, logs, session state) is per-host runtime state and must stay local.
+mkdir -p "$HOME/.config/herdr"
+if [ -f "$HOME/.config/herdr/config.toml" ] && [ ! -L "$HOME/.config/herdr/config.toml" ]; then
+    mv "$HOME/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml.backup"
+    log "Backed up existing herdr config.toml"
+fi
+ln -sfn "$REPO_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+log "Installed/symlinked ~/.config/herdr/config.toml"
+
+# herdr zsh completions (~/.zfunc is already on fpath via zsh/.zshrc).
+if command -v herdr >/dev/null 2>&1; then
+    mkdir -p "$HOME/.zfunc"
+    herdr completion zsh > "$HOME/.zfunc/_herdr" 2>/dev/null \
+        && log "Generated ~/.zfunc/_herdr completions" \
+        || log "WARN: herdr completion generation failed; skipping"
+
+    # herdr agent skill. Generated from the binary rather than installed via
+    # `npx skills add`: identical content, no network, and it always matches
+    # the installed herdr version after `herdr update`. Written into
+    # ~/.claude/skills (persistent) -- NOT symlinked to ~/.agents/skills,
+    # which is on ephemeral root and would dangle after a devenv rebuild.
+    mkdir -p "$HOME/.claude/skills/herdr"
+    herdr --skill > "$HOME/.claude/skills/herdr/SKILL.md" 2>/dev/null \
+        && log "Generated ~/.claude/skills/herdr/SKILL.md" \
+        || log "WARN: herdr skill generation failed; skipping"
+fi
+
 # ============================================================================
 # Terminfo for the local terminal emulator
 # ============================================================================

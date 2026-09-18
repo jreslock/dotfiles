@@ -1,0 +1,8 @@
+onboarding = false
+# herdr config -- overrides only; anything omitted uses herdr's defaults.
+# Full annotated reference: `herdr --default-config`
+# Apply changes to a running server: `herdr server reload-config` (or prefix+shift+r)
+
+[ui]
+# Agent panel ordering: "spaces" (grouped by space) or "priority" (blocked-first attention queue).
+agent_panel_sort = "spaces"
