@@ -342,8 +342,11 @@ apt_packages=()
 for pkg in zsh less unzip; do
     command -v "$pkg" &> /dev/null || apt_packages+=("$pkg")
 done
-# bubblewrap: Codex's Linux sandbox (it falls back to a bundled copy with a warning).
-command -v bwrap &> /dev/null || apt_packages+=(bubblewrap)
+# bubblewrap: Codex's Linux sandbox (it falls back to a bundled copy with a
+# warning). Linux only -- macOS Codex uses Seatbelt.
+if [ "$(uname -s)" = "Linux" ]; then
+    command -v bwrap &> /dev/null || apt_packages+=(bubblewrap)
+fi
 # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor, so bwrap
 # can't set up its sandbox (Codex commands fail with "loopback: Failed
 # RTM_NEWADDR: Operation not permitted") until the bwrap-userns-restrict
@@ -354,7 +357,9 @@ BWRAP_RESTRICTED=0
 if [ "$BWRAP_RESTRICTED" = 1 ] && [ ! -f "$BWRAP_EXTRA_PROFILE" ]; then
     apt_packages+=(apparmor-profiles)
 fi
-if [ ${#apt_packages[@]} -gt 0 ]; then
+if [ ${#apt_packages[@]} -gt 0 ] && ! command -v apt &> /dev/null; then
+    warn "apt not available; skipping packages: ${apt_packages[*]}"
+elif [ ${#apt_packages[@]} -gt 0 ]; then
     log "Installing apt packages: ${apt_packages[*]}"
     if sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
         sudo apt update -yqq && sudo apt install -yqq "${apt_packages[@]}" \
