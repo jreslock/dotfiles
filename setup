@@ -311,6 +311,16 @@ for pkg in zsh less unzip; do
 done
 # bubblewrap: Codex's Linux sandbox (it falls back to a bundled copy with a warning).
 command -v bwrap &> /dev/null || apt_packages+=(bubblewrap)
+# Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor, so bwrap
+# can't set up its sandbox (Codex commands fail with "loopback: Failed
+# RTM_NEWADDR: Operation not permitted") until the bwrap-userns-restrict
+# profile from apparmor-profiles is loaded. See the AppArmor block below.
+BWRAP_EXTRA_PROFILE="/usr/share/apparmor/extra-profiles/bwrap-userns-restrict"
+BWRAP_RESTRICTED=0
+[ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ] && BWRAP_RESTRICTED=1
+if [ "$BWRAP_RESTRICTED" = 1 ] && [ ! -f "$BWRAP_EXTRA_PROFILE" ]; then
+    apt_packages+=(apparmor-profiles)
+fi
 if [ ${#apt_packages[@]} -gt 0 ]; then
     log "Installing apt packages: ${apt_packages[*]}"
     if sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
@@ -318,6 +328,26 @@ if [ ${#apt_packages[@]} -gt 0 ]; then
             || warn "apt install failed for: ${apt_packages[*]}"
     else
         warn "no sudo available; skipping apt packages: ${apt_packages[*]}"
+    fi
+fi
+
+# Load the bwrap AppArmor profile (Codex sandbox) where userns is restricted.
+# Codex's docs offer disabling the restriction host-wide as a fallback; we
+# deliberately don't, because this profile scopes the exception to bwrap.
+BWRAP_PROFILE="/etc/apparmor.d/bwrap-userns-restrict"
+if [ "$BWRAP_RESTRICTED" = 1 ] && command -v bwrap &> /dev/null; then
+    if [ -f "$BWRAP_PROFILE" ]; then
+        log "bwrap AppArmor profile already installed"
+    elif [ ! -f "$BWRAP_EXTRA_PROFILE" ]; then
+        warn "apparmor-profiles missing $BWRAP_EXTRA_PROFILE; Codex sandboxed commands will fail"
+    elif sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
+        log "Installing bwrap AppArmor profile for the Codex sandbox..."
+        sudo cp "$BWRAP_EXTRA_PROFILE" "$BWRAP_PROFILE" \
+            && sudo apparmor_parser -r "$BWRAP_PROFILE" \
+            && log "Loaded $BWRAP_PROFILE" \
+            || warn "failed to load $BWRAP_PROFILE; Codex sandboxed commands will fail"
+    else
+        warn "no sudo; skipping bwrap AppArmor profile (Codex sandboxed commands will fail)"
     fi
 fi
 
