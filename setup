@@ -159,6 +159,17 @@ for f in "$REPO_DIR"/codex/*.toml; do
     fi
 done
 
+# OpenCode config (providers, incl. the bedrock-openai provider the ha presets
+# qwen/glm/kimi use). Symlinked: OpenCode keeps its own state in package.json
+# and node_modules alongside it and does not write opencode.json.
+mkdir -p "$HOME/.config/opencode"
+if [ -f "$HOME/.config/opencode/opencode.json" ] && [ ! -L "$HOME/.config/opencode/opencode.json" ]; then
+    mv "$HOME/.config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json.backup"
+    log "Backed up existing opencode.json"
+fi
+ln -sfn "$REPO_DIR/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+log "Installed/symlinked ~/.config/opencode/opencode.json"
+
 # herdr zsh completions (~/.zfunc is already on fpath via zsh/.zshrc).
 if command -v herdr >/dev/null 2>&1; then
     mkdir -p "$HOME/.zfunc"
