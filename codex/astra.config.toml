@@ -1,0 +1,2 @@
+# Codex profile: `codex -p astra` (layered over config.toml). US profile only.
+model = "us.openai.gpt-6-astra"

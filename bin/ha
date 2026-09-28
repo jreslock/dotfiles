@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# ha: start a herdr agent from a named preset.
+#
+#   ha                    list presets
+#   ha <preset> [name]    split the current pane and start the preset's agent there
+#   ha --pick             numbered menu, then start the choice (for a herdr popup keybinding)
+#
+# Presets live in ~/.config/herdr/agents.json (symlinked from dotfiles):
+#   { "<preset>": { "kind": "<herdr agent kind>", "args": ["..."],
+#                   "bedrock": true, "description": "..." } }
+#
+# "bedrock": true injects a fresh AWS_BEARER_TOKEN_BEDROCK (from `bedrock-token
+# --token-only`) into the new pane only. Claude presets leave it off so Claude
+# Code stays on the Teams subscription; CLAUDE_CODE_USE_BEDROCK is never set.
+#
+# Target pane, in order: --pane ID, HERDR_ACTIVE_PANE_ID (set for popup
+# keybindings), HERDR_PANE_ID (the calling pane), else the UI-focused pane.
+set -euo pipefail
+
+PRESETS="${HA_PRESETS:-$HOME/.config/herdr/agents.json}"
+
+die() { printf 'ha: %s\n' "$*" >&2; exit 1; }
+
+[[ -r "$PRESETS" ]] || die "presets file not found: $PRESETS"
+command -v jq >/dev/null || die "jq is required"
+command -v herdr >/dev/null || die "herdr is required"
+
+list() {
+    jq -r 'to_entries[] | "\(.key)\t\(.value.kind)\t\(.value.description // "")"' "$PRESETS" |
+        column -t -s $'\t'
+}
+
+pick() {
+    mapfile -t names < <(jq -r 'keys_unsorted[]' "$PRESETS")
+    local i=1
+    for n in "${names[@]}"; do
+        printf '%2d) %-8s %s\n' >&2 "$i" "$n" "$(jq -r --arg p "$n" '.[$p].description // ""' "$PRESETS")"
+        i=$((i + 1))
+    done
+    local choice
+    read -r -p "preset (number or name, empty to cancel): " choice
+    [[ -z "$choice" ]] && exit 0
+    if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= ${#names[@]})); then
+        choice="${names[choice - 1]}"
+    fi
+    printf '%s\n' "$choice"
+}
+
+pane_opt=""
+positional=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help | -l | --list) list; exit 0 ;;
+    --pick) positional=("$(pick)"); [[ -z "${positional[0]}" ]] && exit 0; shift ;;
+    --pane) pane_opt="${2:?--pane needs an ID}"; shift 2 ;;
+    *) positional+=("$1"); shift ;;
+    esac
+done
+[[ ${#positional[@]} -eq 0 ]] && { list; exit 0; }
+
+preset="${positional[0]}"
+name="${positional[1]:-}"
+jq -e --arg p "$preset" 'has($p)' "$PRESETS" >/dev/null ||
+    die "unknown preset '$preset' (run 'ha' to list)"
+
+kind=$(jq -r --arg p "$preset" '.[$p].kind' "$PRESETS")
+bedrock=$(jq -r --arg p "$preset" '.[$p].bedrock // false' "$PRESETS")
+mapfile -t args < <(jq -r --arg p "$preset" '.[$p].args // [] | .[]' "$PRESETS")
+
+# Agent names must be unique among live agents: preset, preset-2, preset-3, ...
+if [[ -z "$name" ]]; then
+    name="$preset"
+    n=2
+    while herdr agent get "$name" >/dev/null 2>&1; do
+        name="$preset-$n"
+        n=$((n + 1))
+    done
+fi
+
+target="${pane_opt:-${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}}"
+if [[ -n "$target" ]]; then
+    current=$(herdr pane current --pane "$target")
+else
+    current=$(herdr pane current)
+fi
+target=$(jq -r '.result.pane.pane_id' <<<"$current")
+cwd=$(jq -r '.result.pane.foreground_cwd // .result.pane.cwd // empty' <<<"$current")
+cwd="${cwd:-$PWD}"
+
+# Wide panes split right, tall ones split down (terminal cells are ~2:1).
+read -r width height < <(herdr pane layout --pane "$target" | jq -r --arg t "$target" \
+    '.result.layout.panes[] | select(.pane_id == $t) | "\(.rect.width) \(.rect.height)"')
+direction=down
+((width >= 2 * height)) && direction=right
+
+split_args=(--pane "$target" --direction "$direction" --cwd "$cwd" --no-focus)
+if [[ "$bedrock" == true ]]; then
+    command -v bedrock-token >/dev/null || die "preset '$preset' needs bedrock-token on PATH"
+    token=$(bedrock-token --token-only 2>/dev/null) || die "bedrock-token failed"
+    split_args+=(--env "AWS_BEARER_TOKEN_BEDROCK=$token")
+fi
+
+new_pane=$(herdr pane split "${split_args[@]}" | jq -r '.result.pane.pane_id')
+[[ -n "$new_pane" && "$new_pane" != null ]] || die "pane split failed"
+
+if ! herdr agent start "$name" --kind "$kind" --pane "$new_pane" -- "${args[@]}" >/dev/null; then
+    die "agent '$name' ($kind) did not start cleanly in $new_pane; inspect with: herdr agent read $new_pane"
+fi
+printf 'started %s (%s %s) in %s\n' "$name" "$kind" "${args[*]}" "$new_pane"

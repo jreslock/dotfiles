@@ -135,6 +135,29 @@ if [ -f "$HOME/.config/herdr/config.toml" ] && [ ! -L "$HOME/.config/herdr/confi
 fi
 ln -sfn "$REPO_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 log "Installed/symlinked ~/.config/herdr/config.toml"
+ln -sfn "$REPO_DIR/herdr/agents.json" "$HOME/.config/herdr/agents.json"
+log "Installed/symlinked ~/.config/herdr/agents.json (ha presets)"
+
+# Claude skills tracked in dotfiles (one symlink per skill dir; ~/.claude/skills
+# itself stays a real dir because the herdr skill is generated into it).
+mkdir -p "$HOME/.claude/skills"
+for d in "$REPO_DIR"/claude/skills/*/; do
+    ln -sfn "${d%/}" "$HOME/.claude/skills/$(basename "$d")"
+done
+log "Installed/symlinked ~/.claude/skills from dotfiles"
+
+# Codex config + model profiles (`codex -p <name>`). Copied, not symlinked:
+# Codex writes machine-local state (project trust, tui flags) into the active
+# config files, which must not flow back into version control. Existing files
+# are never overwritten -- delete one to re-seed it from dotfiles.
+mkdir -p "$HOME/.codex"
+for f in "$REPO_DIR"/codex/*.toml; do
+    dest="$HOME/.codex/$(basename "$f")"
+    if [ ! -e "$dest" ]; then
+        cp "$f" "$dest"
+        log "Seeded $dest"
+    fi
+done
 
 # herdr zsh completions (~/.zfunc is already on fpath via zsh/.zshrc).
 if command -v herdr >/dev/null 2>&1; then

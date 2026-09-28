@@ -1,0 +1,77 @@
+{
+  "claude": {
+    "kind": "claude",
+    "description": "Claude Code on the Teams subscription (default model)"
+  },
+  "opus": {
+    "kind": "claude",
+    "args": [
+      "--model",
+      "opus"
+    ],
+    "description": "Claude Code, Opus (Teams)"
+  },
+  "luna": {
+    "kind": "codex",
+    "args": [
+      "-p",
+      "luna"
+    ],
+    "description": "Codex, GPT-5.6 Luna on Bedrock (fast/cheap)",
+    "bedrock": true
+  },
+  "terra": {
+    "kind": "codex",
+    "args": [
+      "-p",
+      "terra"
+    ],
+    "description": "Codex, GPT-5.6 Terra on Bedrock (everyday)",
+    "bedrock": true
+  },
+  "sol": {
+    "kind": "codex",
+    "args": [
+      "-p",
+      "sol"
+    ],
+    "description": "Codex, GPT-5.6 Sol on Bedrock (hard multi-step)",
+    "bedrock": true
+  },
+  "astra": {
+    "kind": "codex",
+    "args": [
+      "-p",
+      "astra"
+    ],
+    "description": "Codex, GPT-6 Astra on Bedrock (frontier)",
+    "bedrock": true
+  },
+  "qwen": {
+    "kind": "opencode",
+    "args": [
+      "-m",
+      "bedrock-openai/qwen.qwen3-coder-next"
+    ],
+    "description": "OpenCode, Qwen3 Coder Next on Bedrock",
+    "bedrock": true
+  },
+  "glm": {
+    "kind": "opencode",
+    "args": [
+      "-m",
+      "bedrock-openai/zai.glm-5"
+    ],
+    "description": "OpenCode, GLM 5 on Bedrock",
+    "bedrock": true
+  },
+  "kimi": {
+    "kind": "opencode",
+    "args": [
+      "-m",
+      "bedrock-openai/moonshotai.kimi-k2.5"
+    ],
+    "description": "OpenCode, Kimi K2.5 on Bedrock",
+    "bedrock": true
+  }
+}

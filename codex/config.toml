@@ -1,0 +1,10 @@
+# Codex on Amazon Bedrock (bedrock-runtime /openai/v1, US cross-Region profiles).
+# Seeded by dotfiles/setup only when ~/.codex/config.toml is missing; Codex
+# writes machine-local state (project trust, tui flags) into this file.
+# Auth: AWS_BEARER_TOKEN_BEDROCK (ha injects it; bedrock-token >= 0.1.1).
+# Without it the AWS SDK chain is used, i.e. whatever your [default] profile is.
+model_provider = "amazon-bedrock-runtime"
+model = "us.openai.gpt-5.6-terra"
+
+[model_providers.amazon-bedrock-runtime.aws]
+region = "us-east-1"

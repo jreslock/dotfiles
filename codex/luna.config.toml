@@ -1,0 +1,2 @@
+# Codex profile: `codex -p luna` (layered over config.toml). US profile only.
+model = "us.openai.gpt-5.6-luna"

@@ -194,3 +194,6 @@ fixterm() {
   printf '\e[?1000l\e[?1002l\e[?1003l\e[?1005l\e[?1006l\e[?1015l\e[?2004l\e[?25h'
   stty sane
 }
+
+# opencode (installer default location)
+[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
