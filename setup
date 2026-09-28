@@ -263,7 +263,7 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Multi-harness agent tooling (ha presets): Codex, OpenCode, bedrock-token.
+# Multi-harness agent tooling (ha presets): Codex and OpenCode.
 # Trial on this setup first; may move into devenv provisioning later.
 # Both installers edit a shell rc when their bin dir isn't on PATH, and
 # ~/.zshrc is a symlink into this repo -- so keep them from touching it.
@@ -290,63 +290,8 @@ else
         || warn "opencode install failed"
 fi
 
-# bedrock-token (om1inc). Preferred: OM1's CodeArtifact PyPI, authenticated
-# with AWS credentials (on a devenv, the instance role -- no gh auth needed).
-# The CodeArtifact domain owner (an AWS account ID) is deliberately NOT in this
-# public repo: set CODEARTIFACT_DOMAIN_OWNER in the environment to enable it.
-# Fallback: install from the private GitHub repo, which needs `gh auth login`.
-# >= 0.1.2: 0.1.1 has the instance-profile signing fix but was never published.
-BEDROCK_TOKEN_SPEC="bedrock-token>=0.1.2"
-BEDROCK_TOKEN_REF="v0.1.1"
-CODEARTIFACT_DOMAIN="${CODEARTIFACT_DOMAIN:-artifacts}"
-CODEARTIFACT_REPO="${CODEARTIFACT_REPO:-pypi}"
-CODEARTIFACT_REGION="${CODEARTIFACT_REGION:-us-east-1}"
-
-codeartifact_token() {
-    # On EC2, use only the instance profile: a [default] SSO profile would
-    # otherwise win the credential chain (and may point at another account).
-    local imds
-    imds=$(curl -fsS -m 2 -X PUT http://169.254.169.254/latest/api/token \
-        -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null) || imds=""
-    if [ -n "$imds" ]; then
-        env -u AWS_PROFILE -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN \
-            AWS_CONFIG_FILE=/dev/null AWS_SHARED_CREDENTIALS_FILE=/dev/null \
-            aws codeartifact get-authorization-token --region "$CODEARTIFACT_REGION" \
-            --domain "$CODEARTIFACT_DOMAIN" --domain-owner "$CODEARTIFACT_DOMAIN_OWNER" \
-            --query authorizationToken --output text
-    else
-        aws codeartifact get-authorization-token --region "$CODEARTIFACT_REGION" \
-            --domain "$CODEARTIFACT_DOMAIN" --domain-owner "$CODEARTIFACT_DOMAIN_OWNER" \
-            --query authorizationToken --output text
-    fi
-}
-
-if command -v bedrock-token &> /dev/null; then
-    log "bedrock-token already installed"
-elif ! command -v uv &> /dev/null; then
-    warn "uv missing; skipping bedrock-token"
-else
-    installed=0
-    if [ -n "${CODEARTIFACT_DOMAIN_OWNER:-}" ] && command -v aws &> /dev/null; then
-        if CA_TOKEN="$(codeartifact_token 2>/dev/null)" && [ -n "$CA_TOKEN" ]; then
-            log "Installing ${BEDROCK_TOKEN_SPEC} from CodeArtifact..."
-            # --default-index: resolve everything via CodeArtifact (which proxies
-            # PyPI) so a same-named public package can't shadow ours.
-            uv tool install "$BEDROCK_TOKEN_SPEC" \
-                --default-index "https://aws:${CA_TOKEN}@${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${CODEARTIFACT_REGION}.amazonaws.com/pypi/${CODEARTIFACT_REPO}/simple/" \
-                && installed=1 || warn "bedrock-token install from CodeArtifact failed; trying GitHub"
-        else
-            warn "could not get a CodeArtifact token; trying GitHub"
-        fi
-        unset CA_TOKEN
-    else
-        log "CODEARTIFACT_DOMAIN_OWNER not set; installing bedrock-token from GitHub"
-    fi
-    if [ "$installed" = 0 ]; then
-        uv tool install "git+https://github.com/om1inc/bedrock-token@${BEDROCK_TOKEN_REF}#subdirectory=python" \
-            || warn "bedrock-token install failed (set CODEARTIFACT_DOMAIN_OWNER, or gh auth login, then re-run setup)"
-    fi
-fi
+# bedrock-token is NOT installed here: devenv provisioning (user data) owns
+# it. `ha` needs it for Bedrock presets and says so if it's missing.
 
 # apt packages (batched to avoid multiple `apt update` runs).
 apt_packages=()
