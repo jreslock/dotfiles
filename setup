@@ -135,16 +135,7 @@ if [ -f "$HOME/.config/herdr/config.toml" ] && [ ! -L "$HOME/.config/herdr/confi
 fi
 ln -sfn "$REPO_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 log "Installed/symlinked ~/.config/herdr/config.toml"
-ln -sfn "$REPO_DIR/herdr/agents.json" "$HOME/.config/herdr/agents.json"
-log "Installed/symlinked ~/.config/herdr/agents.json (ha presets)"
 
-# Claude skills tracked in dotfiles (one symlink per skill dir; ~/.claude/skills
-# itself stays a real dir because the herdr skill is generated into it).
-mkdir -p "$HOME/.claude/skills"
-for d in "$REPO_DIR"/claude/skills/*/; do
-    ln -sfn "${d%/}" "$HOME/.claude/skills/$(basename "$d")"
-done
-log "Installed/symlinked ~/.claude/skills from dotfiles"
 
 # Codex config + model profiles (`codex -p <name>`). Copied, not symlinked:
 # Codex writes machine-local state (project trust, tui flags) into the active
@@ -186,6 +177,59 @@ if command -v herdr >/dev/null 2>&1; then
     herdr --skill > "$HOME/.claude/skills/herdr/SKILL.md" 2>/dev/null \
         && log "Generated ~/.claude/skills/herdr/SKILL.md" \
         || log "WARN: herdr skill generation failed; skipping"
+
+    # herdr-presets plugin (om1incubator/herdr-presets): `ha`, the preset
+    # picker action, and the herdr-agents Claude skill. Plugins live under
+    # ~/.config/herdr (ephemeral root on devenv), so reinstall when missing.
+    # The repo is internal: the clone uses the gh credential helper.
+    HERDR_PRESETS_ID="om1incubator.herdr-presets"
+    herdr_presets_root() {
+        herdr plugin list --json 2>/dev/null |
+            jq -r --arg id "$HERDR_PRESETS_ID" '.. | objects | select(.plugin_id? == $id) | .plugin_root // empty' |
+            head -1
+    }
+    if ! command -v jq >/dev/null 2>&1; then
+        warn "jq missing; skipping herdr-presets plugin"
+    else
+        if [ -z "$(herdr_presets_root)" ]; then
+            log "Installing herdr plugin om1incubator/herdr-presets..."
+            herdr plugin install om1incubator/herdr-presets --yes >/dev/null \
+                || warn "herdr-presets install failed (gh auth login, then re-run setup)"
+        fi
+        HP_ROOT="$(herdr_presets_root)"
+        if [ -n "$HP_ROOT" ]; then
+            # ha on PATH (~/.local/bin), pointing into the managed checkout.
+            bash "$HP_ROOT/bin/install-cli" >/dev/null && log "Linked ~/.local/bin/ha -> herdr-presets"
+            # My presets are tracked here; link them over the plugin's seeded copy.
+            HP_CFG="$(herdr plugin config-dir "$HERDR_PRESETS_ID" 2>/dev/null | tail -1)"
+            if [ -n "$HP_CFG" ]; then
+                mkdir -p "$HP_CFG"
+                if [ -f "$HP_CFG/agents.json" ] && [ ! -L "$HP_CFG/agents.json" ]; then
+                    mv "$HP_CFG/agents.json" "$HP_CFG/agents.json.backup"
+                fi
+                ln -sfn "$REPO_DIR/herdr/agents.json" "$HP_CFG/agents.json"
+                log "Linked herdr-presets agents.json -> dotfiles"
+            fi
+        fi
+    fi
+fi
+
+# Claude Code side of herdr-presets: the herdr-agents skill ships as a Claude
+# plugin from the same repo. Remove the old dotfiles-tracked copy if present.
+if [ -L "$HOME/.claude/skills/herdr-agents" ]; then
+    rm -f "$HOME/.claude/skills/herdr-agents"
+    log "Removed legacy ~/.claude/skills/herdr-agents symlink"
+fi
+if command -v claude >/dev/null 2>&1; then
+    if ! claude plugin list 2>/dev/null | grep -q "herdr-presets@herdr-presets"; then
+        log "Installing Claude plugin herdr-presets..."
+        { claude plugin marketplace list 2>/dev/null | grep -q "herdr-presets" \
+            || claude plugin marketplace add om1incubator/herdr-presets >/dev/null; } \
+            && claude plugin install herdr-presets@herdr-presets >/dev/null \
+            || warn "Claude plugin herdr-presets install failed"
+    else
+        log "Claude plugin herdr-presets already installed"
+    fi
 fi
 
 # ============================================================================

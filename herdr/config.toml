@@ -8,17 +8,15 @@ onboarding = false
 agent_panel_sort = "spaces"
 
 # ---------------------------------------------------------------------------
-# Agent presets (~/.config/herdr/agents.json, launched by ~/.local/bin/ha).
+# Agent presets via the om1incubator/herdr-presets plugin (installed by setup;
+# presets tracked in dotfiles/herdr/agents.json, `ha` in ~/.local/bin).
 # prefix+a opens a picker; the rest start a favourite next to the focused pane.
-# Edit presets in dotfiles/herdr/agents.json; no reload needed for preset changes.
 # ---------------------------------------------------------------------------
 [[keys.command]]
 key = "prefix+a"
-type = "popup"
-command = "\"$HOME/.local/bin/ha\" --pick"
+type = "plugin_action"
+command = "om1incubator.herdr-presets.pick"
 description = "start an agent from a preset"
-width = "70%"
-height = "50%"
 
 [[keys.command]]
 key = "prefix+alt+q"
