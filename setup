@@ -262,11 +262,55 @@ else
     log "uv already installed"
 fi
 
+# ----------------------------------------------------------------------------
+# Multi-harness agent tooling (ha presets): Codex, OpenCode, bedrock-token.
+# Trial on this setup first; may move into devenv provisioning later.
+# Both installers edit a shell rc when their bin dir isn't on PATH, and
+# ~/.zshrc is a symlink into this repo -- so keep them from touching it.
+# ----------------------------------------------------------------------------
+export PATH="$HOME/.local/bin:$PATH"
+
+# Codex CLI (standalone install into ~/.codex/packages, symlinked into
+# ~/.local/bin). The installer only edits a profile when ~/.local/bin is not
+# already on PATH, which the export above guarantees.
+if command -v codex &> /dev/null; then
+    log "codex already installed"
+else
+    log "Installing Codex CLI..."
+    curl -fsSL https://chatgpt.com/codex/install.sh | sh \
+        || warn "codex install failed"
+fi
+
+# OpenCode (installs to ~/.opencode/bin; .zshrc adds that dir to PATH).
+if command -v opencode &> /dev/null || [ -x "$HOME/.opencode/bin/opencode" ]; then
+    log "opencode already installed"
+else
+    log "Installing OpenCode..."
+    curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path \
+        || warn "opencode install failed"
+fi
+
+# bedrock-token (om1inc, private repo). Needs gh auth for github.com, so on a
+# fresh machine run `gh auth login` first and re-run setup if this warns.
+# Pinned: >= v0.1.1 signs devenv tokens with the instance profile.
+BEDROCK_TOKEN_REF="v0.1.1"
+if command -v bedrock-token &> /dev/null; then
+    log "bedrock-token already installed"
+elif command -v uv &> /dev/null; then
+    log "Installing bedrock-token ${BEDROCK_TOKEN_REF}..."
+    uv tool install "git+https://github.com/om1inc/bedrock-token@${BEDROCK_TOKEN_REF}#subdirectory=python" \
+        || warn "bedrock-token install failed (gh auth login, then re-run setup)"
+else
+    warn "uv missing; skipping bedrock-token"
+fi
+
 # apt packages (batched to avoid multiple `apt update` runs).
 apt_packages=()
 for pkg in zsh less unzip; do
     command -v "$pkg" &> /dev/null || apt_packages+=("$pkg")
 done
+# bubblewrap: Codex's Linux sandbox (it falls back to a bundled copy with a warning).
+command -v bwrap &> /dev/null || apt_packages+=(bubblewrap)
 if [ ${#apt_packages[@]} -gt 0 ]; then
     log "Installing apt packages: ${apt_packages[*]}"
     if sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
