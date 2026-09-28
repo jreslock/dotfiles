@@ -73,5 +73,14 @@
     ],
     "description": "OpenCode, Kimi K2.5 on Bedrock",
     "bedrock": true
+  },
+  "deepseek": {
+    "kind": "opencode",
+    "args": [
+      "-m",
+      "bedrock-openai/deepseek.v3.2"
+    ],
+    "bedrock": true,
+    "description": "OpenCode, DeepSeek V3.2 on Bedrock"
   }
 }
