@@ -2,7 +2,10 @@
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "amazon-bedrock": {
-      "options": { "region": "us-east-1", "profile": "bedrock" }
+      "options": {
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
     },
     "bedrock-openai": {
       "npm": "@ai-sdk/openai-compatible",
@@ -11,12 +14,7 @@
         "baseURL": "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1",
         "apiKey": "{env:AWS_BEARER_TOKEN_BEDROCK}"
       },
-      "models": {
-        "qwen.qwen3-coder-next": { "name": "Qwen3 Coder Next", "limit": { "context": 256000, "output": 16000 } },
-        "zai.glm-5": { "name": "GLM 5", "limit": { "context": 200000, "output": 128000 } },
-        "moonshotai.kimi-k2.5": { "name": "Kimi K2.5" },
-        "deepseek.v3.2": { "name": "DeepSeek V3.2" }
-      }
+      "models": {}
     }
   }
 }
