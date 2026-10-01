@@ -181,7 +181,10 @@ if command -v herdr >/dev/null 2>&1; then
     # herdr-presets plugin (om1incubator/herdr-presets): `ha`, the preset
     # picker action, and the herdr-agents Claude skill. Plugins live under
     # ~/.config/herdr (ephemeral root on devenv), so reinstall when missing.
-    # The repo is internal: the clone uses the gh credential helper.
+    # The repo is internal, so the clone needs the gh credential helper. On a
+    # rebuilt devenv gh is already logged in (~/.config/gh is on /mnt/devdata)
+    # but ~/.gitconfig is fresh and lacks the helper, so pass it to this one
+    # command via GIT_CONFIG_* rather than relying on (or editing) gitconfig.
     HERDR_PRESETS_ID="om1incubator.herdr-presets"
     herdr_presets_root() {
         herdr plugin list --json 2>/dev/null |
@@ -193,8 +196,17 @@ if command -v herdr >/dev/null 2>&1; then
     else
         if [ -z "$(herdr_presets_root)" ]; then
             log "Installing herdr plugin om1incubator/herdr-presets..."
-            herdr plugin install om1incubator/herdr-presets --yes >/dev/null \
+            GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=1 \
+                GIT_CONFIG_KEY_0=credential.https://github.com.helper \
+                GIT_CONFIG_VALUE_0='!gh auth git-credential' \
+                herdr plugin install om1incubator/herdr-presets --yes >/dev/null \
                 || warn "herdr-presets install failed (gh auth login, then re-run setup)"
+        fi
+        # prefix+a stayed dead after a plugin was installed under an already
+        # running server (2026-10-01) until reload-config. Reload
+        # only when a server is already up; never start one from setup.
+        if [ -S "$HOME/.config/herdr/herdr.sock" ] && [ -n "$(herdr_presets_root)" ]; then
+            herdr server reload-config >/dev/null 2>&1 && log "Reloaded running herdr server config"
         fi
         HP_ROOT="$(herdr_presets_root)"
         if [ -n "$HP_ROOT" ]; then

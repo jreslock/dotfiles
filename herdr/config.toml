@@ -19,12 +19,6 @@ command = "om1incubator.herdr-presets.pick"
 description = "start an agent from a preset"
 
 [[keys.command]]
-key = "prefix+alt+q"
-type = "shell"
-command = "\"$HOME/.local/bin/ha\" qwen"
-description = "start qwen (OpenCode, Qwen3 Coder Next on Bedrock)"
-
-[[keys.command]]
 key = "prefix+alt+s"
 type = "shell"
 command = "\"$HOME/.local/bin/ha\" sol"

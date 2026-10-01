@@ -46,41 +46,5 @@
     ],
     "description": "Codex, GPT-6 Astra on Bedrock (frontier)",
     "bedrock": true
-  },
-  "qwen": {
-    "kind": "opencode",
-    "args": [
-      "-m",
-      "bedrock-openai/qwen.qwen3-coder-next"
-    ],
-    "description": "OpenCode, Qwen3 Coder Next on Bedrock",
-    "bedrock": true
-  },
-  "glm": {
-    "kind": "opencode",
-    "args": [
-      "-m",
-      "bedrock-openai/zai.glm-5"
-    ],
-    "description": "OpenCode, GLM 5 on Bedrock",
-    "bedrock": true
-  },
-  "kimi": {
-    "kind": "opencode",
-    "args": [
-      "-m",
-      "bedrock-openai/moonshotai.kimi-k2.5"
-    ],
-    "description": "OpenCode, Kimi K2.5 on Bedrock",
-    "bedrock": true
-  },
-  "deepseek": {
-    "kind": "opencode",
-    "args": [
-      "-m",
-      "bedrock-openai/deepseek.v3.2"
-    ],
-    "bedrock": true,
-    "description": "OpenCode, DeepSeek V3.2 on Bedrock"
   }
 }
