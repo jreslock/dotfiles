@@ -124,6 +124,10 @@ alias c="clear"
 alias clb="clean_local_branches"
 alias es="exec zsh"
 alias gitauth="gh auth login && gh auth setup-git"
+# herdr on the devenv. --remote-keybindings server: the default (local) drops
+# every [[keys.command]] binding (prefix+a picker, ha shortcuts). Mac-only, so
+# it doesn't shadow Linux's hexdump `hd`.
+[[ "$(uname)" == "Darwin" ]] && alias hd="herdr --remote devenv --remote-keybindings server"
 alias ll="ls -lh"
 alias myip="dig +short -4 myip.opendns.com @resolver1.opendns.com"
 alias pip="pip3"
