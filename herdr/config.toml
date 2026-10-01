@@ -10,13 +10,20 @@ agent_panel_sort = "spaces"
 # ---------------------------------------------------------------------------
 # Agent presets via the om1incubator/herdr-presets plugin (installed by setup;
 # presets tracked in dotfiles/herdr/agents.json, `ha` in ~/.local/bin).
-# prefix+a opens a picker; the rest start a favourite next to the focused pane.
+# prefix+a opens a picker; prefix+shift+a the same picker into a new space;
+# the rest start a favourite next to the focused pane.
 # ---------------------------------------------------------------------------
 [[keys.command]]
 key = "prefix+a"
 type = "plugin_action"
 command = "om1incubator.herdr-presets.pick"
 description = "start an agent from a preset"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "om1incubator.herdr-presets.pick-space"
+description = "start agents from presets in a new space"
 
 [[keys.command]]
 key = "prefix+alt+s"
