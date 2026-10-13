@@ -1,15 +1,24 @@
 {
   "claude": {
     "kind": "claude",
-    "description": "Claude Code on the Teams subscription (default model)"
+    "description": "Claude Code on your normal login (e.g. Claude Teams)"
   },
-  "opus": {
+  "claude-bedrock": {
     "kind": "claude",
     "args": [
       "--model",
       "opus"
     ],
-    "description": "Claude Code, Opus (Teams)"
+    "description": "Claude Code, Opus 5.5 on Bedrock (us. profiles)",
+    "bedrock": true,
+    "env": {
+      "CLAUDE_CODE_USE_BEDROCK": "1",
+      "AWS_REGION": "us-east-1",
+      "ANTHROPIC_DEFAULT_OPUS_MODEL": "us.anthropic.claude-opus-5-5",
+      "ANTHROPIC_DEFAULT_SONNET_MODEL": "us.anthropic.claude-sonnet-5-5",
+      "ANTHROPIC_DEFAULT_HAIKU_MODEL": "us.anthropic.claude-haiku-5-5",
+      "ANTHROPIC_DEFAULT_FABLE_MODEL": "us.anthropic.claude-fable-5-1"
+    }
   },
   "luna": {
     "kind": "codex",
@@ -46,5 +55,9 @@
     ],
     "description": "Codex, GPT-6 Astra on Bedrock (frontier)",
     "bedrock": true
+  },
+  "kiro": {
+    "kind": "kiro",
+    "description": "Kiro CLI on your Kiro login (model picked in Kiro)"
   }
 }
