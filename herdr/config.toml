@@ -36,3 +36,6 @@ key = "prefix+alt+c"
 type = "shell"
 command = "\"$HOME/.local/bin/ha\" claude"
 description = "start claude (Claude Code on Teams)"
+
+[ui.sound]
+enabled = false
