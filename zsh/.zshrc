@@ -34,7 +34,9 @@ _pane_tty_refresh() {
   [[ "$t" == /dev/* ]] && export PANE_TTY="$t"
 }
 precmd_functions+=(_pane_tty_refresh)
-[[ -x "$HOME/.local/bin/xdg-open" ]] && export BROWSER="$HOME/.local/bin/xdg-open"
+# Headless hosts only: on macOS, Python's webbrowser should fall through to
+# `open` so a real local browser pops, rather than the clipboard-only shim.
+[[ "$(uname)" != "Darwin" && -x "$HOME/.local/bin/xdg-open" ]] && export BROWSER="$HOME/.local/bin/xdg-open"
 
 # Pin the Snowflake connector's EXTERNALBROWSER/oauth-code local callback to a
 # fixed port (default is OS-ephemeral, i.e. a different port every login) so a
