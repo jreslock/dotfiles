@@ -18,33 +18,6 @@ fi
 [[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
 
 # ============================================================================
-# Headless auth-URL clipboard bridge
-# ============================================================================
-# Snapshot this pane's tty so the xdg-open shim (see ~/.local/bin/xdg-open)
-# can still OSC 52-copy to it even from subprocesses that detach from the
-# controlling terminal (e.g. Python's webbrowser BackgroundBrowser). Done via
-# a precmd hook rather than inline here: P10k's instant-prompt feature
-# detaches stdin during shell startup, so a `tty` run synchronously at this
-# point in the file captures the literal string "not a tty" instead of a real
-# path. precmd runs once stdin is reattached, right before the real prompt
-# displays, and the /dev/* guard means it only ever overwrites PANE_TTY with
-# a real path, never with that failure string.
-_pane_tty_refresh() {
-  local t="$(tty 2>/dev/null)"
-  [[ "$t" == /dev/* ]] && export PANE_TTY="$t"
-}
-precmd_functions+=(_pane_tty_refresh)
-# Headless hosts only: on macOS, Python's webbrowser should fall through to
-# `open` so a real local browser pops, rather than the clipboard-only shim.
-[[ "$(uname)" != "Darwin" && -x "$HOME/.local/bin/xdg-open" ]] && export BROWSER="$HOME/.local/bin/xdg-open"
-
-# Pin the Snowflake connector's EXTERNALBROWSER/oauth-code local callback to a
-# fixed port (default is OS-ephemeral, i.e. a different port every login) so a
-# single permanent local SSH port-forward covers every future login instead of
-# chasing a new port each time. See snowflake.connector.auth.webbrowser.
-export SF_AUTH_SOCKET_PORT=38888
-
-# ============================================================================
 # Claude Code
 # ============================================================================
 # Set here rather than in ~/.claude/settings.json so that file stays byte-
