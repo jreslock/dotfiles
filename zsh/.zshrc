@@ -133,6 +133,9 @@ function unsetprofile() {
 
 function ssologin() {
   unsetprofile
+  # No [default] profile: log in to the om1 sso-session directly. One token
+  # covers every profile that references it. Pass args to override.
+  (( $# )) || set -- --sso-session om1
   # PKCE's browser redirect needs a localhost callback, which doesn't reach
   # anywhere useful on a headless Linux box connected over SSH. Device code
   # avoids that entirely, so use it there; Mac has a real local browser.
@@ -149,7 +152,7 @@ function get_account_id() {
 }
 
 function check_logged_in() {
-  if aws sts get-caller-identity --profile default > /dev/null 2>&1; then
+  if aws sts get-caller-identity --profile bedrock > /dev/null 2>&1; then
     echo "Already Logged into AWS SSO"
   else
     echo "Authenticating AWS SSO"
